@@ -1,0 +1,31 @@
+boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+
+
+
+
+
+
+                            border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                color: isDarkMode ? Colors.white10 : Colors.grey.shade200,
+                                color: context.colorScheme.outline.withValues(alpha: 0.15),
+                                color: context.colorScheme.outline,
+                                width: 1.5,
+                            ),
+
+
+                            color: AppPalette.info50,
+                            borderRadius: context.roundedSm,
+                            border: Border.all(
+                              color: AppPalette.info200.withValues(alpha: 0.10),
+                              width: 1,
+                            ),
+
+
+                            
