@@ -146,30 +146,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   // 3. Quick Actions
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                    child: QuickActionsGrid(onTabChange: widget.onTabChange),
-                  ),
-
-                  context.gapLg,
-                  // 5. Top Doctors
-                  const HomeNearbyMedicals(),
-
-                  context.gapXxl,
-                  // 4. Subscription Card
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                    child: const JivanSubscriptionCard(),
+                    child: QuickActionsRow(onTabChange: widget.onTabChange),
                   ),
 
                   context.gapXl,
 
                   const HomeTopDoctors(),
                   context.gapXxl,
-
-                  // 7. Invite Card
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                    child: const FooterInviteSection(),
-                  ),
 
                   // Add bottom padding so the last item isn't hidden behind the floating button
                   const SizedBox(height: 40),

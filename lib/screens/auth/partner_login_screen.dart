@@ -52,7 +52,7 @@ class _PartnerLoginScreenState extends State<PartnerLoginScreen> {
   void _navigateBasedOnRole(String role) {
     if (!mounted) return;
     final Widget nextScreen = (role == 'super_admin' || role == 'SuperAdmin')
-        ? const AdminLayout()    // const SuperAdminLayout()
+        ? const AdminLayout() // const SuperAdminLayout()
         : const AdminLayout();
 
     Navigator.pushAndRemoveUntil(
@@ -406,37 +406,6 @@ class _PartnerLoginScreenState extends State<PartnerLoginScreen> {
                     ],
 
                     context.gapXxl,
-
-                    // ── REGISTER LINK ─────────────────────────────────────
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "New Partner? ",
-                          style: context.bodyMd?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const PartnerRegisterScreen(),
-                            ),
-                          ),
-                          child: Text(
-                            "Register Clinic",
-                            style: context.bodyMd?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    context.gapLg,
                   ],
                 ),
               ),

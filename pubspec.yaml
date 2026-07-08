@@ -91,7 +91,7 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/Jivan_App_Logo.png" # Path to your high-res icon (1024x1024 recommended)
+  image_path: "assets/icon/SoudaminiHealthcareAppLogo.png" # Path to your high-res icon (1024x1024 recommended)
   min_sdk_android: 21 # optional
 
 
@@ -104,9 +104,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/icon/Jivan_App_Logo.png
-    - assets/images/Jivan_App_Logo_transparent.png
-    - assets/images/Jivan_App_Logo_transparent.png
+    - assets/icon/SoudaminiHealthcareAppLogo.png
+    - assets/images/SoudaminiHealthcareLogo.png
+    - assets/images/SoudaminiHealthcareLogo.png
     - assets/images/GB_Promo_Banner.png
     - assets/images/Slider1.png
 

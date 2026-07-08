@@ -90,12 +90,14 @@ class _SplashScreenState extends State<SplashScreen>
 
       // ୧. ପ୍ରଥମେ Admin ଚେକ୍ କରନ୍ତୁ (Admin Priority)
       if (adminToken != null && adminToken.isNotEmpty) {
-        _navigateWithFade(const AdminLayout()); // ⚠️ ଏଠାରେ ଆପଣଙ୍କ ଆଡମିନ୍ ପେଜ୍ ର ନାମ ଦିଅନ୍ତୁ
-      } 
+        _navigateWithFade(
+          const AdminLayout(),
+        ); // ⚠️ ଏଠାରେ ଆପଣଙ୍କ ଆଡମିନ୍ ପେଜ୍ ର ନାମ ଦିଅନ୍ତୁ
+      }
       // ୨. ତା'ପରେ User ଚେକ୍ କରନ୍ତୁ
       else if (authToken != null && authToken.isNotEmpty) {
         _navigateWithFade(const MainLayout());
-      } 
+      }
       // ୩. ଯଦି କେହିବି ଲଗଇନ୍ ନାହାଁନ୍ତି, ତେବେ ଲଗଇନ୍ ସ୍କ୍ରିନ୍ କୁ ନିଅନ୍ତୁ
       else {
         _navigateWithFade(const LoginScreen());
@@ -155,8 +157,16 @@ class _SplashScreenState extends State<SplashScreen>
                 center: Alignment.center,
                 radius: 1.2,
                 colors: context.isDarkMode
-                    ? [colorScheme.surface, context.theme.scaffoldBackgroundColor]
-                    : [colorScheme.surface, colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)],
+                    ? [
+                        colorScheme.surface,
+                        context.theme.scaffoldBackgroundColor,
+                      ]
+                    : [
+                        colorScheme.surface,
+                        colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.3,
+                        ),
+                      ],
               ),
             ),
           ),
@@ -183,16 +193,29 @@ class _SplashScreenState extends State<SplashScreen>
                     ScaleTransition(
                       scale: _logoScale,
                       child: Container(
-                        width: 120, height: 120,
+                        width: 120,
+                        height: 120,
                         padding: const EdgeInsets.all(AppSpacing.lg),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle, color: colorScheme.surface,
-                          boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 30, spreadRadius: 10, offset: const Offset(0, 10))],
+                          shape: BoxShape.circle,
+                          color: colorScheme.surface,
+                          boxShadow: [
+                            BoxShadow(
+                              color: colorScheme.primary.withValues(alpha: 0.2),
+                              blurRadius: 30,
+                              spreadRadius: 10,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
                         child: Image.asset(
-                          'assets/images/Jivan_App_Logo_transparent.png',
+                          'assets/images/SoudaminiHealthcareLogo.png',
                           fit: BoxFit.contain,
-                          errorBuilder: (context, error, stackTrace) => Icon(Icons.health_and_safety_rounded, size: 60, color: colorScheme.primary),
+                          errorBuilder: (context, error, stackTrace) => Icon(
+                            Icons.health_and_safety_rounded,
+                            size: 60,
+                            color: colorScheme.primary,
+                          ),
                         ),
                       ),
                     ),
@@ -205,9 +228,24 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _fadeText,
                     child: Column(
                       children: [
-                        Text("Jivan", style: context.displayMd?.copyWith(fontWeight: FontWeight.w900, color: colorScheme.onSurface, letterSpacing: -1.5, height: 1.0)),
+                        Text(
+                          "Soudamini Healthcare",
+                          style: context.displaySm?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: colorScheme.onSurface,
+                            letterSpacing: -1.5,
+                            height: 1.0,
+                          ),
+                        ),
                         context.gapSm,
-                        Text("Your Health Companion", style: context.bodyLg?.copyWith(fontWeight: FontWeight.w500, color: colorScheme.onSurface.withValues(alpha: 0.6), letterSpacing: 2.0)),
+                        Text(
+                          "Your Health Companion",
+                          style: context.bodyLg?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            letterSpacing: 2.0,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -216,14 +254,30 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
           Positioned(
-            bottom: AppSpacing.xxl, left: 0, right: 0,
+            bottom: AppSpacing.xxl,
+            left: 0,
+            right: 0,
             child: FadeTransition(
               opacity: _fadeText,
               child: Column(
                 children: [
-                  Text("Powered by", style: context.labelSm?.copyWith(color: colorScheme.onSurface.withValues(alpha: 0.4), fontWeight: FontWeight.w600, letterSpacing: 1.0)),
+                  Text(
+                    "Powered by",
+                    style: context.labelSm?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 1.0,
+                    ),
+                  ),
                   context.gapXs,
-                  Text("Jivan Healthtech", style: context.titleMd?.copyWith(fontWeight: FontWeight.bold, color: colorScheme.primary, letterSpacing: 0.5)),
+                  Text(
+                    "Jivan Healthtech",
+                    style: context.titleMd?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -248,7 +302,8 @@ class PulseRipplePainter extends CustomPainter {
       final double startOffset = i * 0.33;
       final double adjustedValue = (animationValue + startOffset) % 1.0;
       final double radius = 60 + (adjustedValue * 90);
-      final double opacity = (1.0 - adjustedValue) * 0.2 * math.sin(adjustedValue * math.pi);
+      final double opacity =
+          (1.0 - adjustedValue) * 0.2 * math.sin(adjustedValue * math.pi);
 
       final paint = Paint()
         ..color = color.withValues(alpha: opacity)
@@ -261,6 +316,7 @@ class PulseRipplePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(PulseRipplePainter oldDelegate) {
-    return oldDelegate.animationValue != animationValue || oldDelegate.color != color;
+    return oldDelegate.animationValue != animationValue ||
+        oldDelegate.color != color;
   }
 }

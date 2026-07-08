@@ -224,7 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           boxShadow: context.shadowSm,
                         ),
                         child: Image.asset(
-                          'assets/images/Jivan_App_Logo_transparent.png',
+                          'assets/images/SoudaminiHealthcareLogo.png',
                           errorBuilder: (_, __, ___) => Icon(
                             LucideIcons.heartPulse,
                             size: 50,
@@ -469,13 +469,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           child: RichText(
                             text: TextSpan(
-                              text: "Are you a doctor? ",
+                              text: "Are you a doctor or admin? ",
                               style: context.bodyMd?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),
                               children: [
                                 TextSpan(
-                                  text: "Partner Login",
+                                  text: "Admin Login",
                                   style: context.bodyMd?.copyWith(
                                     color: colorScheme.primary,
                                     fontWeight: FontWeight.bold,
