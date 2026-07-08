@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../../../models/doctor_model.dart';
 
-class DoctorAboutSection extends StatelessWidget {
+class DoctorAboutSection extends StatefulWidget {
   final Doctor doctor;
   final bool isOdia;
 
@@ -13,131 +13,202 @@ class DoctorAboutSection extends StatelessWidget {
   });
 
   @override
+  State<DoctorAboutSection> createState() => _DoctorAboutSectionState();
+}
+
+class _DoctorAboutSectionState extends State<DoctorAboutSection> {
+  bool _expanded = false;
+
+  bool get _isOdia => widget.isOdia;
+  Doctor get doctor => widget.doctor;
+
+  @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    const Color primaryColor = Color.fromARGB(255, 22, 96, 255);
+    final scheme = Theme.of(context).colorScheme;
+    final about = doctor.about;
+    final isLong = about.length > 180;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(
-          context,
-          isOdia ? "ଡାକ୍ତରଙ୍କ ବିଷୟରେ" : "About Doctor",
-          isDarkMode,
-        ),
+        _sectionTitle(context, _isOdia ? "ଡାକ୍ତରଙ୍କ ବିଷୟରେ" : "About Doctor"),
         const SizedBox(height: 12),
-        Text(
-          doctor.about,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: isDarkMode ? Colors.grey.shade400 : Colors.blueGrey.shade700,
-            height: 1.6,
-            fontSize: 14,
+        AnimatedSize(
+          duration: const Duration(milliseconds: 200),
+          alignment: Alignment.topCenter,
+          child: Text(
+            about,
+            maxLines: (isLong && !_expanded) ? 4 : null,
+            overflow: (isLong && !_expanded)
+                ? TextOverflow.ellipsis
+                : TextOverflow.visible,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+              height: 1.6,
+              fontSize: 14,
+            ),
           ),
         ),
-        const SizedBox(height: 32),
-        if (doctor.rawEducation.isNotEmpty) ...[
-          _buildSectionTitle(
-            context,
-            isOdia ? "ଶିକ୍ଷା" : "Education",
-            isDarkMode,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: doctor.rawEducation
-                .map(
-                  (edu) => _buildTag(
-                    context,
-                    edu,
-                    LucideIcons.graduationCap,
-                    isDarkMode,
-                    primaryColor,
+        if (isLong)
+          GestureDetector(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Row(
+                children: [
+                  Text(
+                    _expanded
+                        ? (_isOdia ? "କମ୍ ଦେଖନ୍ତୁ" : "Read less")
+                        : (_isOdia ? "ଅଧିକ ପଢ଼ନ୍ତୁ" : "Read more"),
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                   ),
-                )
-                .toList(),
+                  Icon(
+                    _expanded
+                        ? Icons.keyboard_arrow_up_rounded
+                        : Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: scheme.primary,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
+
+        // EDUCATION TIMELINE
+        if (doctor.rawEducation.isNotEmpty) ...[
+          const SizedBox(height: 28),
+          _sectionTitle(context, _isOdia ? "ଶିକ୍ଷା" : "Education"),
+          const SizedBox(height: 14),
+          Column(
+            children: List.generate(doctor.rawEducation.length, (i) {
+              final isLast = i == doctor.rawEducation.length - 1;
+              return _timelineRow(context, doctor.rawEducation[i], isLast);
+            }),
+          ),
         ],
+
+        // LANGUAGES
         if (doctor.languages.isNotEmpty) ...[
-          _buildSectionTitle(
-            context,
-            isOdia ? "ଭାଷା" : "Languages",
-            isDarkMode,
-          ),
+          const SizedBox(height: 28),
+          _sectionTitle(context, _isOdia ? "ଭାଷା" : "Languages"),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: doctor.languages
-                .map(
-                  (lang) => _buildTag(
-                    context,
-                    lang,
-                    LucideIcons.languages,
-                    isDarkMode,
-                    primaryColor,
-                  ),
-                )
+                .map((lang) => _langChip(context, lang))
                 .toList(),
           ),
-          const SizedBox(height: 32),
         ],
-        const SizedBox(height: 100), // Padding for sticky bottom bar
+        const SizedBox(height: 8),
       ],
     );
   }
 
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title,
-    bool isDarkMode,
-  ) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w900,
-        fontSize: 18,
-        color: isDarkMode ? Colors.white : Colors.black87,
+  Widget _timelineRow(BuildContext context, String text, bool isLast) {
+    final scheme = Theme.of(context).colorScheme;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  LucideIcons.graduationCap,
+                  size: 16,
+                  color: scheme.primary,
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: scheme.outlineVariant.withValues(alpha: 0.6),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: 7, bottom: isLast ? 0 : 18),
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  height: 1.35,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTag(
-    BuildContext context,
-    String text,
-    IconData icon,
-    bool isDarkMode,
-    Color primaryColor,
-  ) {
+  Widget _langChip(BuildContext context, String lang) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: isDarkMode ? Colors.white10 : Colors.grey.shade200,
-        ),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: primaryColor),
+          Icon(LucideIcons.languages, size: 14, color: scheme.primary),
           const SizedBox(width: 8),
           Text(
-            text,
+            lang,
             style: TextStyle(
               fontSize: 13,
-              color: isDarkMode
-                  ? Colors.grey.shade300
-                  : Colors.blueGrey.shade700,
-              fontWeight: FontWeight.bold,
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w600,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _sectionTitle(BuildContext context, String title) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: 18,
+            color: scheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

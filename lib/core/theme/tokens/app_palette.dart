@@ -4,8 +4,13 @@ class AppPalette {
   // ===========================================================================
   // 0. SEED CONFIGURATION (CHANGE THESE ONLY)
   // ===========================================================================
-  // This is the single field you wanted to control the brand:
-  static const Color _brandSeed = Color(0xFF074EE7);
+  // This is the single field that controls the brand.
+  // 🟢 Brand is now GREEN. To retune it, change ONLY this value.
+  //    A few alternatives you can drop in:
+  //      Color(0xFF16A34A) // vivid green   (current)
+  //      Color(0xFF059669) // emerald (deeper, higher contrast on white)
+  //      Color(0xFF15803D) // forest green
+  static const Color _brandSeed = Color(0xFF16A34A);
 
   // We define seeds for semantic colors too, so their scales generate automatically.
   static const Color _neutralSeed = Color.fromARGB(255, 124, 124, 124); // Slate
@@ -15,7 +20,7 @@ class AppPalette {
   static const Color _errorSeed = Color(0xFFD32F2F);
 
   // ===========================================================================
-  // 1. BRAND COLORS (Jivan Blue)
+  // 1. BRAND COLORS (Jivan Green)
   // Generated dynamically from _brandSeed
   // ===========================================================================
   static Color get jivanBlue50 => _tint(_brandSeed, 0.95);
@@ -86,8 +91,8 @@ class AppPalette {
   static Color get error500 => _errorSeed;
   static Color get error700 => _shade(_errorSeed, 0.30);
 
-  // --- INFO (Blue) ---
-  // References the Brand Colors directly
+  // --- INFO (Brand) ---
+  // References the Brand Colors directly (now green).
   static Color get info50 => jivanBlue50;
   static Color get info100 => jivanBlue100;
   static Color get info200 => jivanBlue200;

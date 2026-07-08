@@ -10,8 +10,7 @@ import '../../../../models/doctor_model.dart';
 import '../../../../models/booking_models.dart';
 import '../../doctor_profile/doctor_profile_screen.dart';
 
-const Color _primaryColor = Color.fromARGB(255, 22, 96, 255);
-const Color _greenColor = Color(0xFF16A34A);
+const Color _kGold = Color(0xFFFFC107);
 
 class DoctorCardWidget extends StatelessWidget {
   final Doctor doctor;
@@ -24,6 +23,27 @@ class DoctorCardWidget extends StatelessWidget {
     required this.isOdia,
     this.isVertical = true,
   });
+
+  // ---------------------------------------------------------------------------
+  // 🎨 PALETTE-DRIVEN COLOR TOKENS (track the brand seed / theme)
+  // ---------------------------------------------------------------------------
+  Color _brand(bool dark) =>
+      dark ? AppPalette.jivanBlue300 : AppPalette.jivanBlue600;
+  Color get _brandSolid => AppPalette.jivanBlue500;
+  Color _surface(bool dark) =>
+      dark ? AppPalette.neutral900 : AppPalette.neutralWhite;
+  Color _titleColor(bool dark) =>
+      dark ? AppPalette.neutralWhite : AppPalette.neutralBlack;
+  Color _mutedText(bool dark) =>
+      dark ? AppPalette.neutral400 : AppPalette.neutral600;
+  Color _mutedIcon(bool dark) =>
+      dark ? AppPalette.neutral400 : AppPalette.neutral500;
+  Color _imageBg(bool dark) => dark ? AppPalette.neutral800 : AppPalette.info50;
+  Color _chipBg(bool dark) =>
+      dark ? AppPalette.neutral800 : AppPalette.neutral100;
+  Color _hairline(bool dark) => dark
+      ? AppPalette.neutral700.withValues(alpha: 0.4)
+      : AppPalette.neutral200;
 
   bool get _hasSlots =>
       doctor.nextAvailable.isNotEmpty &&
@@ -40,6 +60,14 @@ class DoctorCardWidget extends StatelessWidget {
     return dist >= 1000
         ? "${(dist / 1000).toStringAsFixed(1)} km"
         : "${dist.toInt()} m";
+  }
+
+  String get _experienceText {
+    final raw = doctor.experience.trim();
+    if (raw.isEmpty) return "";
+    final years = raw.replaceAll(RegExp(r'[^0-9]'), '');
+    if (years.isEmpty) return "";
+    return isOdia ? "$years ବର୍ଷ" : "$years yrs exp";
   }
 
   String get _clinicPhone {
@@ -67,8 +95,7 @@ class DoctorCardWidget extends StatelessWidget {
 
       final selection = BookingSelection(
         slotId: doctor.id,
-        date: doctor.slotDate, 
-        // Slot time ରେ start ଏବଂ end time ପଠାନ୍ତୁ
+        date: doctor.slotDate,
         slotTime: "${doctor.startTime} - ${doctor.endTime}",
       );
 
@@ -115,75 +142,84 @@ class DoctorCardWidget extends StatelessWidget {
   }
 
   // =========================================================================
-  // 1. ଭର୍ଟିକାଲ୍ ଡିଜାଇନ୍ (ULTIMATE FIX - 100% Overflow Proof)
+  // 1. VERTICAL CARD — hero image + info (for horizontal carousels)
   // =========================================================================
   Widget _buildVerticalCard(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final bool hasValidImage = doctor.image.isNotEmpty;
-    final String dist = _formattedDistance;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final hasValidImage = doctor.image.isNotEmpty;
+    final dist = _formattedDistance;
 
     return GestureDetector(
       onTap: () => _handleProfileTap(context),
       child: Container(
-        width: 250, // Premium width
-        margin: const EdgeInsets.only(right: 12, bottom: 8),
+        width: 250,
+        margin: const EdgeInsets.only(right: 14, bottom: 10),
         decoration: BoxDecoration(
-          color: isDarkMode ? const Color(0xFF1E1E1E) : AppPalette.neutralWhite,
-          borderRadius: BorderRadius.circular(10), // Premium curve
-          boxShadow: [
-            BoxShadow(
-              color: isDarkMode ? Colors.black38 : Colors.black.withOpacity(0.06),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(
-            color: isDarkMode ? Colors.white12 : AppPalette.info200.withOpacity(0.15),
-            width: 1,
-          ),
+          color: _surface(dark),
+          borderRadius: BorderRadius.circular(4),
+
+          border: Border.all(color: _hairline(dark), width: 1),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // --- HERO IMAGE ---
-            // 🚀 ମାଷ୍ଟରଷ୍ଟ୍ରୋକ୍ (Masterstroke): Expanded ବର୍ତ୍ତମାନ Image ରେ ଅଛି!
-            // ଏହାଦ୍ୱାରା ତଳ କାର୍ଡ କେବେବି ଫାଟିବ ନାହିଁ, ବରଂ ଇମେଜ୍ ନିଜେ ଜାଗା ଅନୁସାରେ ସାଇଜ୍ ବଦଳାଇବ।
+            // --- HERO IMAGE with scrim ---
             Expanded(
-              child: SizedBox(
-                width: double.infinity,
-                child: Stack(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: double.infinity,
-                      color: isDarkMode ? Colors.black26 : AppPalette.info50,
-                      child: hasValidImage
-                          ? CachedNetworkImage(
-                              imageUrl: doctor.image,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center, // 🚀 Center କରାଗଲା ଯାହାଦ୍ୱାରା ଫଟୋ ପରଫେକ୍ଟ୍ ଦେଖାଯିବ
-                              placeholder: (context, url) => const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              ),
-                              errorWidget: (context, url, error) =>
-                                  _buildFallbackAvatar(isDarkMode),
-                            )
-                          : _buildFallbackAvatar(isDarkMode),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Container(
+                    color: _imageBg(dark),
+                    child: hasValidImage
+                        ? CachedNetworkImage(
+                            imageUrl: doctor.image,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
+                            placeholder: (c, u) => const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            errorWidget: (c, u, e) =>
+                                _buildFallbackAvatar(dark),
+                          )
+                        : _buildFallbackAvatar(dark),
+                  ),
+                  // Bottom gradient scrim for depth
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 60,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.35),
+                          ],
+                        ),
+                      ),
                     ),
-                    Positioned(top: 10, right: 10, child: _buildRatingBadge()),
-                  ],
-                ),
+                  ),
+                  Positioned(top: 12, right: 12, child: _buildRatingPill()),
+                  if (_hasSlots)
+                    Positioned(
+                      left: 12,
+                      bottom: 12,
+                      child: _statusDot("Available", AppPalette.success500),
+                    ),
+                ],
               ),
             ),
 
-            // --- DETAILS SECTION ---
-            // 🚀 ଏଠାରୁ Expanded ହଟାଇ ଦିଆଗଲା। ଏହା କେବଳ ସୀମିତ (ଦରକାରୀ) ଜାଗା ନେବ।
+            // --- DETAILS ---
             Padding(
-              padding: const EdgeInsets.only(left: 12, right: 12, top: 12, bottom: 12), // 🚀 ଠିକ୍ 8px Bottom Padding
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min, // ସର୍ବନିମ୍ନ ଜାଗା ନେବ
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
@@ -194,44 +230,39 @@ class DoctorCardWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            color: isDarkMode ? Colors.white : Colors.black87,
-                            letterSpacing: -0.2,
+                            fontWeight: FontWeight.w800,
+                            color: _titleColor(dark),
+                            letterSpacing: -0.3,
                           ),
                         ),
                       ),
                       if (doctor.isVerified)
-                        const Padding(
-                          padding: EdgeInsets.only(left: 4),
-                          child: Icon(
-                            Icons.verified,
-                            size: 16,
-                            color: _primaryColor,
-                          ),
-                        ),
+                        Icon(Icons.verified, size: 16, color: _brandSolid),
                     ],
                   ),
-                  const SizedBox(height: 2),
-
-                  Text(
-                    doctor.specialty,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isDarkMode ? Colors.blue.shade200 : _primaryColor,
-                    ),
-                  ),
                   const SizedBox(height: 8),
-
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(child: _specialtyPill(dark)),
+                      if (_experienceText.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: _infoChip(
+                            LucideIcons.briefcase,
+                            _experienceText,
+                            dark,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
                     children: [
                       Icon(
                         LucideIcons.mapPin,
                         size: 13,
-                        color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade500,
+                        color: _mutedIcon(dark),
                       ),
                       const SizedBox(width: 4),
                       Expanded(
@@ -241,39 +272,19 @@ class DoctorCardWidget extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                            color: _mutedText(dark),
                           ),
                         ),
                       ),
                       if (dist.isNotEmpty) ...[
                         const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _primaryColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            dist,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: _primaryColor,
-                            ),
-                          ),
-                        ),
+                        _buildDistanceBadge(dist),
                       ],
                     ],
                   ),
-                  const SizedBox(height: 10),
-
-                  _buildSlotAvailabilityWidget(isDarkMode),
-
                   const SizedBox(height: 12),
-
+                  Divider(height: 1, color: _hairline(dark)),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -282,11 +293,11 @@ class DoctorCardWidget extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: _buildPriceSection(isDarkMode),
+                          child: _buildPriceSection(dark),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      _buildActionButton(context, isDarkMode, isSmall: true),
+                      _buildActionButton(context, dark),
                     ],
                   ),
                 ],
@@ -299,339 +310,399 @@ class DoctorCardWidget extends StatelessWidget {
   }
 
   // =========================================================================
-  // 2. ହୋରିଜେଣ୍ଟାଲ୍ ଡିଜାଇନ୍ (Horizontal Design - 100% Overflow Proof)
+  // 2. HORIZONTAL CARD — profile-style row card (for vertical lists)
   // =========================================================================
   Widget _buildHorizontalCard(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final bool hasValidImage = doctor.image.isNotEmpty;
-    final String dist = _formattedDistance;
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final dist = _formattedDistance;
 
     return GestureDetector(
       onTap: () => _handleProfileTap(context),
-      // 🚀 ମୁଖ୍ୟ ପରିବର୍ତ୍ତନ: Fixed Height ହଟାଇ IntrinsicHeight ର ବ୍ୟବହାର
-      child: IntrinsicHeight(
-        child: Container(
-          decoration: BoxDecoration(
-            color: isDarkMode
-                ? const Color(0xFF1E1E1E)
-                : AppPalette.neutralWhite,
-            // borderRadius: BorderRadius.circular(12),
-            border: Border(
-              bottom: BorderSide(
-                color: AppPalette.info200.withValues(alpha: 0.10),
-                width: 1,
-              ),
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment
-                .stretch, // 🚀 [FIXED]: ଉଭୟ ପାର୍ଶ୍ୱ ସମାନ ହାଇଟ୍ ନେବ
-            children: [
-              // --- IMAGE SECTION ---
-              SizedBox(
-                width: 100,
-                child: Center(
-                  // <-- Added Center so the circle doesn't stretch into an oval
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        width: 100, // Fixed width for circle
-                        height: 100, // Fixed height for circle
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle, // Make it a circle
-                          color: isDarkMode
-                              ? Colors.black26
-                              : Colors.blue.shade50,
-                        ),
-                        clipBehavior:
-                            Clip.antiAlias, // Clip image inside the circle
-                        child: hasValidImage
-                            ? CachedNetworkImage(
-                                imageUrl: doctor.image,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                errorWidget: (context, url, error) =>
-                                    _buildFallbackAvatar(isDarkMode),
-                              )
-                            : _buildFallbackAvatar(isDarkMode),
-                      ),
-                      Positioned(
-                        bottom: -4,
-                        left: 0,
-                        right: 0,
-                        child: Align(
-                          alignment: Alignment.bottomCenter,
-                          child: _buildRatingBadge(),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _surface(dark),
+          borderRadius: BorderRadius.circular(8),
 
-              // --- DETAILS SECTION ---
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
+          border: Border.all(color: _hairline(dark), width: 1),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildAvatar(72, dark),
+                const SizedBox(width: 14),
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment
-                        .spaceBetween, // 🚀 [FIXED]: ଏହା Spacer() ବଦଳରେ କାମ କରିବ ଏବଂ କଟିବ ନାହିଁ
                     children: [
-                      Column(
+                      Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  doctor.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w900,
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                  ),
-                                ),
-                              ),
-                              if (doctor.isVerified)
-                                const Padding(
-                                  padding: EdgeInsets.only(left: 4),
-                                  child: Icon(
-                                    Icons.verified,
-                                    size: 14,
-                                    color: _primaryColor,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            doctor.specialty,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: isDarkMode
-                                  ? Colors.blue.shade200
-                                  : _primaryColor,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-
-                          Row(
-                            children: [
-                              Icon(
-                                LucideIcons.mapPin,
-                                size: 12,
-                                color: isDarkMode
-                                    ? Colors.grey.shade400
-                                    : Colors.grey.shade500,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  "${doctor.clinicName}, ${doctor.city}",
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDarkMode
-                                        ? Colors.grey.shade400
-                                        : Colors.grey.shade600,
-                                  ),
-                                ),
-                              ),
-                              if (dist.isNotEmpty) ...[
-                                const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 4,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _primaryColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
                                   child: Text(
-                                    dist,
-                                    style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: _primaryColor,
+                                    doctor.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: _titleColor(dark),
+                                      letterSpacing: -0.3,
                                     ),
                                   ),
                                 ),
+                                if (doctor.isVerified)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 4),
+                                    child: Icon(
+                                      Icons.verified,
+                                      size: 15,
+                                      color: _brandSolid,
+                                    ),
+                                  ),
                               ],
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 8),
-
-                          _buildSlotAvailabilityWidget(isDarkMode),
+                          const SizedBox(width: 8),
+                          _buildRatingPill(),
                         ],
                       ),
-
-                      const SizedBox(height: 8), // Padding before bottom row
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
                         children: [
-                          Expanded(
-                            child: _buildPriceSection(isDarkMode),
-                          ), // 🚀 [FIXED]: Expanded used to prevent row overflow
-                          _buildActionButton(
-                            context,
-                            isDarkMode,
-                            isSmall: true,
+                          _specialtyPill(dark),
+                          if (_experienceText.isNotEmpty)
+                            _infoChip(
+                              LucideIcons.briefcase,
+                              _experienceText,
+                              dark,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            LucideIcons.mapPin,
+                            size: 12,
+                            color: _mutedIcon(dark),
                           ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              "${doctor.clinicName}, ${doctor.city}",
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: _mutedText(dark),
+                              ),
+                            ),
+                          ),
+                          if (dist.isNotEmpty) ...[
+                            const SizedBox(width: 4),
+                            _buildDistanceBadge(dist),
+                          ],
                         ],
                       ),
                     ],
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildAvailabilityWidget(dark),
+            const SizedBox(height: 12),
+            Divider(height: 1, color: _hairline(dark)),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(child: _buildPriceSection(dark)),
+                const SizedBox(width: 10),
+                _buildActionButton(context, dark),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 
   // =========================================================================
-  // 3. ଛୋଟ ଏବଂ ସ୍ମାର୍ଟ ୱିଜେଟ୍ କମ୍ପୋନେଣ୍ଟ୍ (Helper Widgets)
+  // 3. HELPER WIDGETS
   // =========================================================================
 
-  Widget _buildSlotAvailabilityWidget(bool isDarkMode) {
-    if (_hasSlots) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: _greenColor.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(6),
+  Widget _buildAvatar(double size, bool dark) {
+    final hasValidImage = doctor.image.isNotEmpty;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: _imageBg(dark),
+            border: Border.all(
+              color: _brandSolid.withValues(alpha: 0.18),
+              width: 2,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: hasValidImage
+              ? CachedNetworkImage(
+                  imageUrl: doctor.image,
+                  fit: BoxFit.cover,
+                  placeholder: (c, u) => const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  errorWidget: (c, u, e) => _buildFallbackAvatar(dark),
+                )
+              : _buildFallbackAvatar(dark),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(LucideIcons.calendarClock, size: 12, color: _greenColor),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                doctor.nextAvailable,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: _greenColor,
-                ),
+        if (doctor.isVerified)
+          Positioned(
+            right: -3,
+            bottom: -3,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: _surface(dark),
+                shape: BoxShape.circle,
               ),
+              child: Icon(Icons.verified, size: 17, color: _brandSolid),
             ),
-          ],
-        ),
-      );
-    } else {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: Colors.redAccent.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              LucideIcons.calendarOff,
-              size: 11,
-              color: Colors.redAccent,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                isOdia ? "ସ୍ଲଟ୍ ନାହିଁ" : "No Slots Available",
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.redAccent,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
+          ),
+      ],
+    );
   }
 
-  Widget _buildActionButton(
-    BuildContext context,
-    bool isDarkMode, {
-    required bool isSmall,
-  }) {
-    if (_hasSlots) {
-      return SizedBox(
-        height: isSmall ? 36 : 40,
-        child: FilledButton(
-          onPressed: () => _handleMainAction(context),
-          style: FilledButton.styleFrom(
-            backgroundColor: _primaryColor,
-            padding: EdgeInsets.symmetric(horizontal: isSmall ? 40 : 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            elevation: isDarkMode ? 0 : 2,
-            shadowColor: _primaryColor.withValues(alpha: 0.4),
-          ),
-          child: Text(
-            isOdia ? "ବୁକ୍" : "Book",
+  Widget _specialtyPill(bool dark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: _brandSolid.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        doctor.specialty,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: _brand(dark),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoChip(IconData icon, String text, bool dark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: _chipBg(dark),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: _mutedIcon(dark)),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: isSmall ? 14 : 14,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: _mutedText(dark),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingPill() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: _kGold.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, color: _kGold, size: 13),
+          const SizedBox(width: 3),
+          Text(
+            "${doctor.rating}",
+            style: TextStyle(
+              color: AppPalette.warning700,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statusDot(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
               color: Colors.white,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistanceBadge(String dist) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: _brandSolid.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        dist,
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          color: _brandSolid,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAvailabilityWidget(bool dark) {
+    final available = _hasSlots;
+    final color = available ? AppPalette.success500 : AppPalette.error500;
+    final onColor = available ? AppPalette.success700 : AppPalette.error500;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.20)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            available ? LucideIcons.calendarClock : LucideIcons.calendarOff,
+            size: 13,
+            color: onColor,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              available
+                  ? doctor.nextAvailable
+                  : (isOdia ? "ସ୍ଲଟ୍ ନାହିଁ" : "No slots available"),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: onColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, bool dark) {
+    if (_hasSlots) {
+      // Gradient brand CTA
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppPalette.primaryGradient,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _handleMainAction(context),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isOdia ? "ବୁକ୍" : "Book",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(
+                    LucideIcons.arrowRight,
+                    size: 16,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       );
     } else if (_clinicPhone.isNotEmpty) {
+      final callColor = _titleColor(dark);
       return SizedBox(
-        height: isSmall ? 36 : 40,
+        height: 40,
         child: OutlinedButton.icon(
           onPressed: () => _handleMainAction(context),
-          icon: Icon(
-            LucideIcons.phone,
-            size: 14,
-            color: isDarkMode ? Colors.white : Colors.black87,
-          ),
+          icon: Icon(LucideIcons.phone, size: 14, color: callColor),
           label: Text(
             isOdia ? "କଲ୍" : "Call",
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: isSmall ? 14 : 14,
-              color: isDarkMode ? Colors.white : Colors.black87,
+              fontSize: 14,
+              color: callColor,
             ),
           ),
           style: OutlinedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: isSmall ? 12 : 16),
-            side: BorderSide(
-              color: isDarkMode ? Colors.white24 : Colors.grey.shade300,
-              width: 1,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            side: BorderSide(color: _hairline(dark), width: 1.4),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
@@ -641,37 +712,53 @@ class DoctorCardWidget extends StatelessWidget {
     }
   }
 
-  Widget _buildPriceSection(bool isDarkMode) {
+  Widget _buildPriceSection(bool dark) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min, // 🚀 ମୁଖ୍ୟ ପରିବର୍ତ୍ତନ: କେବଳ ଦରକାରୀ ଉଚ୍ଚତା ନେବ
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          isOdia ? "ପରାମର୍ଶ ଫି" : "Fees",
+          isOdia ? "ପରାମର୍ଶ ଫି" : "Consultation Fee",
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w600,
-            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade500,
-            height: 1.1, // 🚀 ଲାଇନ୍ ହାଇଟ୍ କମାଗଲା 
+            color: _mutedIcon(dark),
+            height: 1.1,
           ),
         ),
-        const SizedBox(height: 2), // 🚀 ଅଯଥା ଗ୍ୟାପ୍ ହଟାଗଲା
+        const SizedBox(height: 3),
         doctor.price > 0
-            ? Text(
-                "₹${doctor.price}",
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  color: isDarkMode ? Colors.white : Colors.black87,
-                  height: 1.1, // 🚀 ଲାଇନ୍ ହାଇଟ୍ କମାଗଲା
-                ),
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    "₹${doctor.price}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 18,
+                      color: _titleColor(dark),
+                      height: 1.0,
+                    ),
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    isOdia ? "/ ଭିଜିଟ୍" : "/ visit",
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: _mutedIcon(dark),
+                    ),
+                  ),
+                ],
               )
-            : const Text(
+            : Text(
                 "Contact Clinic",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.orange,
+                  color: AppPalette.warning500,
                   fontSize: 12,
                 ),
               ),
@@ -679,63 +766,17 @@ class DoctorCardWidget extends StatelessWidget {
     );
   }
 
-  Widget _buildRatingBadge() {
+  Widget _buildFallbackAvatar(bool dark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [
-          BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star_rounded, color: Color(0xFFFFD700), size: 12),
-          const SizedBox(width: 4),
-          Text(
-            "${doctor.rating}",
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFallbackAvatar(bool isDarkMode) {
-    return Container(
-      color: isDarkMode
-          ? Colors.white10
-          : _primaryColor.withValues(alpha: 0.05),
+      color: dark ? AppPalette.neutral800 : _brandSolid.withValues(alpha: 0.06),
       child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.black26 : Colors.white,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            LucideIcons.stethoscope,
-            size: 28,
-            color: _primaryColor.withValues(alpha: 0.5),
-          ),
+        child: Icon(
+          LucideIcons.stethoscope,
+          size: 28,
+          color: _brandSolid.withValues(alpha: 0.55),
         ),
       ),
     );
-  }
-
-  String _parseDegree(List<String> education) {
-    if (education.isEmpty) return "";
-    final first = education.first;
-    if (first.contains("-")) {
-      return first.split("-")[0].trim();
-    }
-    return first;
   }
 }
 
@@ -746,15 +787,15 @@ class DoctorCardSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: isDarkMode ? Colors.white10 : Colors.grey.shade200,
-      highlightColor: isDarkMode ? Colors.white24 : Colors.grey.shade100,
+      baseColor: dark ? AppPalette.neutral800 : AppPalette.neutral200,
+      highlightColor: dark ? AppPalette.neutral700 : AppPalette.neutral100,
       child: Container(
-        width: isVertical ? 240 : double.infinity,
-        height: isVertical ? 250 : 155,
+        width: isVertical ? 250 : double.infinity,
+        height: isVertical ? 320 : 190,
         decoration: BoxDecoration(
-          color: isDarkMode ? Colors.black : Colors.white,
+          color: dark ? AppPalette.neutral900 : AppPalette.neutralWhite,
           borderRadius: BorderRadius.circular(20),
         ),
       ),

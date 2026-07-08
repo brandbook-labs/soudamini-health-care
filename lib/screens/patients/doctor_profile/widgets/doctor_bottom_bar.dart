@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:my_new_app/core/utils/theme_utils.dart';
 
 class DoctorBottomBar extends StatelessWidget {
   final int currentPrice;
@@ -16,13 +18,8 @@ class DoctorBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    const Color primaryColor = Color.fromARGB(255, 22, 96, 255);
-    final cardColor = isDarkMode ? const Color(0xFF191919) : Colors.white;
-    final subTextColor = isDarkMode
-        ? Colors.grey.shade400
-        : Colors.grey.shade500;
-    final borderColor = isDarkMode ? Colors.white10 : Colors.grey.shade200;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
 
     String feeLabel = isOdia ? "ପରାମର୍ଶ ଫି" : "Consultation Fee";
     if (appointmentType == "follow_up") {
@@ -30,62 +27,128 @@ class DoctorBottomBar extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
-        border: Border.all(color: borderColor),
+        color: scheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
+        border: Border(
+          top: BorderSide(color: scheme.outlineVariant.withValues(alpha: 0.6)),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
+            blurRadius: 22,
+            offset: const Offset(0, -6),
+          ),
+        ],
       ),
       child: SafeArea(
-        child: Row(
-          children: [
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  feeLabel,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: subTextColor,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          child: Row(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    feeLabel,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                    ),
                   ),
+                  const SizedBox(height: 3),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        currentPrice > 0 ? "₹$currentPrice" : "Contact",
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w900,
+                          color: scheme.onSurface,
+                        ),
+                      ),
+                      if (currentPrice > 0) ...[
+                        const SizedBox(width: 3),
+                        Text(
+                          isOdia ? "/ ଭିଜିଟ୍" : "/ visit",
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _GradientButton(
+                  onTap: onBookPressed,
+                  label: isOdia ? "ବୁକ୍ କରନ୍ତୁ" : "Book Appointment",
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  currentPrice > 0 ? "₹$currentPrice" : "Contact Clinic",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w900,
-                    color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GradientButton extends StatelessWidget {
+  final VoidCallback onTap;
+  final String label;
+  const _GradientButton({required this.onTap, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: AppPalette.primaryGradient,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(LucideIcons.calendar, size: 18, color: Colors.white),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(width: 24),
-            Expanded(
-              child: FilledButton(
-                onPressed: onBookPressed,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  backgroundColor: primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  isOdia ? "ବୁକ୍ କରନ୍ତୁ" : "Book Appointment",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );

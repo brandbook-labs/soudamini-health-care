@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:my_new_app/screens/patients/booking/appointment_booking_screen.dart';
 import 'package:my_new_app/screens/patients/providers/doctor_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:my_new_app/screens/patients/booking/booking_bottom_sheet.dart';
 import 'package:my_new_app/controllers/language_controller.dart';
@@ -12,7 +14,7 @@ import 'package:my_new_app/models/clinic_availability_model.dart';
 
 import '../../../models/booking_models.dart';
 
-// 🚀 IMPORT OUR NEW MODULAR WIDGETS
+// 🚀 MODULAR WIDGETS
 import 'widgets/doctor_sliver_app_bar.dart';
 import 'widgets/doctor_info_header.dart';
 import 'widgets/clinic_location_card.dart';
@@ -30,6 +32,7 @@ class DoctorProfileScreen extends StatefulWidget {
 
 class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   bool _isLoading = true;
+  bool _hasError = false;
   Doctor? _doctor;
 
   int _selectedLocationIndex = 0;
@@ -53,22 +56,45 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
       if (mounted) {
         setState(() {
           _doctor = provider.selectedDoctorProfile;
+          _hasError = _doctor == null;
           _isLoading = false;
         });
       }
     } catch (e) {
       debugPrint("Error fetching doctor details via Provider: $e");
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  void _retry() {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+    _fetchDoctorDetails();
+  }
+
+  Future<void> _refresh() async {
+    final provider = context.read<DoctorProvider>();
+    await provider.fetchSingleDoctorProfile(widget.doctorId);
+    if (mounted) {
+      setState(() => _doctor = provider.selectedDoctorProfile);
     }
   }
 
   // ==========================================
-  // 🚀 DYNAMIC GETTERS (Unchanged)
+  // DYNAMIC GETTERS (unchanged)
   // ==========================================
   Map<String, dynamic> get _currentLocationData {
     if (_doctor == null || _doctor!.locations.isEmpty) return {};
-    if (_selectedLocationIndex >= _doctor!.locations.length)
+    if (_selectedLocationIndex >= _doctor!.locations.length) {
       return _doctor!.locations[0];
+    }
     return _doctor!.locations[_selectedLocationIndex] as Map<String, dynamic>;
   }
 
@@ -161,6 +187,8 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   }
 
   void _showBookingSheet(BuildContext context, bool isOdia) async {
+    HapticFeedback.selectionClick();
+    final colorScheme = Theme.of(context).colorScheme;
     final availability = _currentAvailability;
 
     if (availability.isEmpty) {
@@ -170,11 +198,12 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
             isOdia
                 ? "ଏହି କ୍ଲିନିକ୍ ରେ ସ୍ଲଟ୍ ଉପଲବ୍ଧ ନାହିଁ"
                 : "No available slots for this clinic right now.",
+            style: TextStyle(color: colorScheme.onError),
           ),
-          backgroundColor: Colors.redAccent,
+          backgroundColor: colorScheme.error,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
       );
@@ -237,85 +266,316 @@ class _DoctorProfileScreenState extends State<DoctorProfileScreen> {
   Widget build(BuildContext context) {
     final isOdia =
         context.watch<LanguageController>().currentLocale.languageCode == 'or';
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final scaffoldBgColor = isDarkMode
-        ? const Color(0xFF121212)
-        : const Color(0xFFF8FAFC);
+    final theme = Theme.of(context);
+    final bg = theme.scaffoldBackgroundColor;
 
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: scaffoldBgColor,
-        body: const Center(child: CircularProgressIndicator()),
+        backgroundColor: bg,
+        body: _LoadingView(onBack: () => Navigator.maybePop(context)),
       );
     }
-    if (_doctor == null) {
+
+    if (_hasError || _doctor == null) {
       return Scaffold(
-        backgroundColor: scaffoldBgColor,
-        body: const Center(child: Text("Error loading data")),
+        backgroundColor: bg,
+        body: _ErrorView(
+          isOdia: isOdia,
+          onRetry: _retry,
+          onBack: () => Navigator.maybePop(context),
+        ),
       );
     }
 
     return Scaffold(
-      backgroundColor: scaffoldBgColor,
+      backgroundColor: bg,
       bottomNavigationBar: DoctorBottomBar(
         currentPrice: _currentPrice,
         appointmentType: _selectedAppointmentType,
         onBookPressed: () => _showBookingSheet(context, isOdia),
         isOdia: isOdia,
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          DoctorSliverAppBar(imageUrl: _doctor!.image),
+      body: RefreshIndicator(
+        color: theme.colorScheme.primary,
+        onRefresh: _refresh,
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            DoctorSliverAppBar(
+              imageUrl: _doctor!.image,
+              isVerified: _doctor!.isVerified,
+            ),
 
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. DOCTOR INFO HEADER
-                  DoctorInfoHeader(
-                    doctor: _doctor!,
-                    currentClinicName: _currentClinicName,
-                    isOdia: isOdia,
+            // Content sheet — pulled up to overlap the hero image with a
+            // rounded top for a premium, layered feel.
+            SliverToBoxAdapter(
+              child: Container(
+                transform: Matrix4.translationValues(0, -26, 0),
+                decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(28),
                   ),
-                  const SizedBox(height: 32),
-
-                  // 2. CLINIC & MAP SECTION
-                  ClinicLocationCard(
-                    doctor: _doctor!,
-                    selectedIndex: _selectedLocationIndex,
-                    onClinicChanged: _onClinicChanged,
-                    mapController: _mapController,
-                    currentLat: _currentLat,
-                    currentLng: _currentLng,
-                    currentClinicName: _currentClinicName,
-                    currentClinicAddress: _currentClinicAddress,
-                    currentDistance: _currentDistance,
-                    isOdia: isOdia,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // 3. APPOINTMENT TYPE & FEES
-                  AppointmentFeeSection(
-                    selectedType: _selectedAppointmentType,
-                    onTypeChanged: (type) =>
-                        setState(() => _selectedAppointmentType = type),
-                    consultationFee: _consultationFee,
-                    followUpFee: _followUpFee,
-                    isOdia: isOdia,
-                  ),
-
-                  const Divider(height: 48),
-
-                  // 4. ABOUT, EDUCATION, LANGUAGES
-                  DoctorAboutSection(doctor: _doctor!, isOdia: isOdia),
-                ],
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Small grab-handle accent for the sheet
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                    ),
+                    DoctorInfoHeader(
+                      doctor: _doctor!,
+                      currentClinicName: _currentClinicName,
+                      isOdia: isOdia,
+                    ),
+                    const SizedBox(height: 32),
+                    ClinicLocationCard(
+                      doctor: _doctor!,
+                      selectedIndex: _selectedLocationIndex,
+                      onClinicChanged: _onClinicChanged,
+                      mapController: _mapController,
+                      currentLat: _currentLat,
+                      currentLng: _currentLng,
+                      currentClinicName: _currentClinicName,
+                      currentClinicAddress: _currentClinicAddress,
+                      currentDistance: _currentDistance,
+                      isOdia: isOdia,
+                    ),
+                    const SizedBox(height: 32),
+                    AppointmentFeeSection(
+                      selectedType: _selectedAppointmentType,
+                      onTypeChanged: (type) =>
+                          setState(() => _selectedAppointmentType = type),
+                      consultationFee: _consultationFee,
+                      followUpFee: _followUpFee,
+                      isOdia: isOdia,
+                    ),
+                    const SizedBox(height: 32),
+                    DoctorAboutSection(doctor: _doctor!, isOdia: isOdia),
+                    const SizedBox(height: 24),
+                  ],
+                ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// LOADING SKELETON (mirrors the real layout)
+// ===========================================================================
+class _LoadingView extends StatelessWidget {
+  final VoidCallback onBack;
+  const _LoadingView({required this.onBack});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final base = scheme.onSurface.withValues(alpha: 0.08);
+    final highlight = scheme.onSurface.withValues(alpha: 0.16);
+
+    Widget box(double w, double h, {double r = 8}) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(r),
+      ),
+    );
+
+    return Stack(
+      children: [
+        Shimmer.fromColors(
+          baseColor: base,
+          highlightColor: highlight,
+          child: ListView(
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: [
+              Container(height: 280, color: Colors.white),
+              Transform.translate(
+                offset: const Offset(0, -26),
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      box(220, 26, r: 6),
+                      const SizedBox(height: 12),
+                      box(150, 16, r: 6),
+                      const SizedBox(height: 14),
+                      box(120, 16, r: 6),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          box(90, 30, r: 999),
+                          const SizedBox(width: 10),
+                          box(110, 30, r: 999),
+                        ],
+                      ),
+                      const SizedBox(height: 22),
+                      box(double.infinity, 78, r: 18),
+                      const SizedBox(height: 28),
+                      box(double.infinity, 190, r: 20),
+                      const SizedBox(height: 28),
+                      Row(
+                        children: [
+                          Expanded(child: box(double.infinity, 120, r: 18)),
+                          const SizedBox(width: 14),
+                          Expanded(child: box(double.infinity, 120, r: 18)),
+                        ],
+                      ),
+                      const SizedBox(height: 28),
+                      box(140, 18, r: 6),
+                      const SizedBox(height: 12),
+                      box(double.infinity, 14, r: 6),
+                      const SizedBox(height: 8),
+                      box(double.infinity, 14, r: 6),
+                      const SizedBox(height: 8),
+                      box(240, 14, r: 6),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: _CircleBackButton(onTap: onBack),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ===========================================================================
+// ERROR STATE
+// ===========================================================================
+class _ErrorView extends StatelessWidget {
+  final bool isOdia;
+  final VoidCallback onRetry;
+  final VoidCallback onBack;
+  const _ErrorView({
+    required this.isOdia,
+    required this.onRetry,
+    required this.onBack,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: scheme.errorContainer.withValues(alpha: 0.3),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.cloud_off_rounded,
+                    size: 44,
+                    color: scheme.error,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  isOdia
+                      ? "ପ୍ରୋଫାଇଲ୍ ଲୋଡ୍ ହେଲା ନାହିଁ"
+                      : "Couldn't load profile",
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  isOdia
+                      ? "ଦୟାକରି ଆପଣଙ୍କ ଇଣ୍ଟରନେଟ୍ ଯାଞ୍ଚ କରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
+                      : "Please check your connection and try again.",
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: onRetry,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text(isOdia ? "ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ" : "Try Again"),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: _CircleBackButton(onTap: onBack),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CircleBackButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _CircleBackButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: scheme.surface.withValues(alpha: 0.9),
+      shape: const CircleBorder(),
+      elevation: 1,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(Icons.arrow_back, color: scheme.onSurface, size: 22),
+        ),
       ),
     );
   }

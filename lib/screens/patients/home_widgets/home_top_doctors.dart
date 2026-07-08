@@ -5,7 +5,6 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
 // --- APP IMPORTS ---
-import 'package:my_new_app/controllers/language_controller.dart';
 import 'package:my_new_app/core/components/index.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart'; // ThemeContext
 import 'package:my_new_app/screens/patients/providers/user_provider.dart';
@@ -21,48 +20,41 @@ class HomeTopDoctors extends StatefulWidget {
 }
 
 class _HomeTopDoctorsState extends State<HomeTopDoctors> {
-  final ScrollController _scrollController = ScrollController();
   late UserProvider _userProvider;
 
   @override
   void initState() {
     super.initState();
 
-    // ୧. ପ୍ରୋଭାଇଡର୍ କୁ ରେଫରେନ୍ସ କରନ୍ତୁ
     _userProvider = context.read<UserProvider>();
 
-    // ୨. ଲିସନର୍ ଲଗାନ୍ତୁ ଯାହାଦ୍ୱାରା ଲୋକେସନ୍ ଆସିବା ମାତ୍ରେ ଡାକ୍ତର ଖୋଜିବ
+    // Refetch doctors as soon as location becomes available.
     _userProvider.addListener(_syncLocationWithDoctorProvider);
 
-    // ୩. ଯଦି ଆଗରୁ ଲୋକେସନ୍ ଲୋଡ୍ ହୋଇସାରିଛି ତେବେ ତୁରନ୍ତ ଆରମ୍ଭ କରନ୍ତୁ
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncLocationWithDoctorProvider();
     });
-
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _userProvider.removeListener(_syncLocationWithDoctorProvider);
-    _scrollController.dispose();
     super.dispose();
   }
 
   // =========================================================================
-  // 🚀 THE ULTIMATE FIX: Secure Sync (ଏହା Race Condition କୁ ମାରିଦେବ)
+  // Secure sync (guards against the location/profile race condition)
   // =========================================================================
   void _syncLocationWithDoctorProvider() {
-    // ଯଦି UserProvider ବର୍ତ୍ତମାନ ଲୋକେସନ୍ ବା ପ୍ରୋଫାଇଲ୍ ଖୋଜୁଛି, ତେବେ ଚୁପଚାପ୍ ଅପେକ୍ଷା କରନ୍ତୁ!
-    if (_userProvider.isLoadingLocation || _userProvider.isLoadingProfile)
+    if (_userProvider.isLoadingLocation || _userProvider.isLoadingProfile) {
       return;
+    }
 
-    // 🚀 ପରଫେକ୍ଟ୍ ବ୍ୟାକଅପ୍: City -> District -> Profile Saved Address
+    // Fallback order: City -> District -> Profile saved address
     String fallback = _userProvider.city;
     if (fallback.isEmpty) fallback = _userProvider.district;
     if (fallback.isEmpty) fallback = _userProvider.userSavedAddress;
 
-    // DoctorProvider କୁ ପଠାନ୍ତୁ
     context.read<DoctorProvider>().updateLocationFromUserProvider(
       lat: _userProvider.latitude,
       lng: _userProvider.longitude,
@@ -70,28 +62,15 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
     );
   }
 
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 50) {
-      final provider = context.read<DoctorProvider>();
-      if (!provider.isLoadingMore && provider.hasMoreData) {
-        provider.fetchNearestDoctors();
-      }
-    }
-  }
-
-  void _shareApp(bool isOdia) {
+  void _shareApp() {
     HapticFeedback.mediumImpact();
-    final String shareMessage = isOdia
-        ? "ଜୀବନ ହେଲଥ୍ ଆପ୍ ବ୍ୟବହାର କରନ୍ତୁ! ଆପଣଙ୍କ ନିକଟସ୍ଥ ଶ୍ରେଷ୍ଠ ଡାକ୍ତରଙ୍କୁ ଖୋଜନ୍ତୁ ଏବଂ ବୁକ୍ କରନ୍ତୁ। https://play.google.com/store/apps/details?id=com.jivan.health"
-        : "Check out Jivan Health App! Find and book the best doctors near you. https://play.google.com/store/apps/details?id=com.jivan.health";
+    const shareMessage =
+        "Check out Jivan Health App! Find and book the best doctors near you. https://play.google.com/store/apps/details?id=com.jivan.health";
     Share.share(shareMessage);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isOdia =
-        context.watch<LanguageController>().currentLocale.languageCode == 'or';
     final doctorProvider = context.watch<DoctorProvider>();
     final userProvider = context.watch<UserProvider>();
 
@@ -100,68 +79,70 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
         doctorProvider.isListFirstLoading || userProvider.isLoadingLocation;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         JivanSectionHeader(
-          title: isOdia ? "ଶୀର୍ଷ ବିଶେଷଜ୍ଞ" : "Top Specialists",
-          subtitle: isOdia
-              ? "ନିକଟସ୍ଥ ଲୋକପ୍ରିୟ ଡାକ୍ତର"
-              : "Highly rated doctors nearby",
-          actionLabel: isOdia ? "ସମସ୍ତ ଦେଖନ୍ତୁ" : "See All",
+          title: "Top Specialists",
+          subtitle: "Highly rated doctors nearby",
+          actionLabel: "See All",
           onActionTap: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const DoctorsListScreen()),
           ),
         ),
-        SizedBox(
-          height: 360,
-          child: isPageLoading && topDoctors.isEmpty
-              ? ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: 3,
-                  separatorBuilder: (context, index) => context.gapSm,
-                  itemBuilder: (context, index) =>
-                      const DoctorCardSkeleton(isVertical: true),
-                )
-              : topDoctors.isEmpty
-              ? _buildEmptyState(context, isOdia)
-              : ListView.separated(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount:
-                      topDoctors.length +
-                      (doctorProvider.isLoadingMore ? 1 : 0),
-                  separatorBuilder: (context, index) => context.gapXs,
-                  itemBuilder: (context, index) {
-                    if (index == topDoctors.length) {
-                      return Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(context.spaceLg),
-                          child: const CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    return DoctorCardWidget(
-                      doctor: topDoctors[index],
-                      isOdia: isOdia,
-                    );
-                  },
-                ),
-        ),
+
+        // 🚀 VERTICAL LIST — flows inside the home page's own scroll view.
+        // shrinkWrap + NeverScrollableScrollPhysics => no nested scrolling.
+        if (isPageLoading && topDoctors.isEmpty)
+          _buildShimmerList(context)
+        else if (topDoctors.isEmpty)
+          _buildEmptyState(context)
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              context.spaceMd,
+              context.spaceXs,
+              context.spaceMd,
+              0,
+            ),
+            itemCount: topDoctors.length,
+            separatorBuilder: (context, index) =>
+                SizedBox(height: context.spaceSm),
+            itemBuilder: (context, index) {
+              return DoctorCardWidget(
+                doctor: topDoctors[index],
+                isOdia: false,
+                isVertical: false, // wide row card, matches the list screen
+              );
+            },
+          ),
       ],
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, bool isOdia) {
-    // 🎨 Replaced hardcoded checks with ThemeContext extensions
+  Widget _buildShimmerList(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.fromLTRB(
+        context.spaceMd,
+        context.spaceXs,
+        context.spaceMd,
+        0,
+      ),
+      itemCount: 4,
+      separatorBuilder: (context, index) => SizedBox(height: context.spaceSm),
+      itemBuilder: (context, index) =>
+          const DoctorCardSkeleton(isVertical: false),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
     return Container(
       margin: EdgeInsets.symmetric(horizontal: context.spaceMd),
-      padding: EdgeInsets.all(
-        context.spaceLg,
-      ), // Approximating the old 32 padding
+      padding: EdgeInsets.all(context.spaceLg),
       decoration: BoxDecoration(
         color: AppPalette.info50,
         borderRadius: context.roundedSm ?? BorderRadius.circular(8),
@@ -173,7 +154,7 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
           Container(
             padding: EdgeInsets.all(context.spaceXs),
             decoration: BoxDecoration(
-              color: context.colorScheme.primary.withOpacity(0.1),
+              color: context.colorScheme.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -184,9 +165,7 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
           ),
           context.gapMd ?? const SizedBox(height: 20),
           Text(
-            isOdia
-                ? "ଆମେ ଏପର୍ଯ୍ୟନ୍ତ ସେଠାରେ ପହଞ୍ଚି ନାହୁଁ"
-                : "We haven't reached you yet",
+            "We haven't reached you yet",
             textAlign: TextAlign.center,
             style: context.titleLg?.copyWith(
               fontWeight: FontWeight.w800,
@@ -196,9 +175,7 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
           ),
           context.gapXs ?? const SizedBox(height: 12),
           Text(
-            isOdia
-                ? "ଆମେ ଖୁବ୍ ଶୀଘ୍ର ଆପଣଙ୍କ ଅଞ୍ଚଳକୁ ବିସ୍ତାର କରୁଛୁ! ଏହାକୁ ଶୀଘ୍ର ଆଣିବାରେ ସାହାଯ୍ୟ କରିବାକୁ ଆପଣଙ୍କ ସାଙ୍ଗମାନଙ୍କୁ ଆମନ୍ତ୍ରଣ କରନ୍ତୁ।"
-                : "We are expanding to your area quickly! Help us bring top doctors here faster by inviting your clinics, doctors and friends.",
+            "We are expanding to your area quickly! Help us bring top doctors here faster by inviting your clinics, doctors and friends.",
             textAlign: TextAlign.center,
             style: context.bodySm?.copyWith(
               height: 1.2,
@@ -210,17 +187,16 @@ class _HomeTopDoctorsState extends State<HomeTopDoctors> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton.icon(
-              onPressed: () => _shareApp(isOdia),
+              onPressed: _shareApp,
               icon: const Icon(LucideIcons.share2, size: 18),
               label: Text(
-                isOdia ? "ଡାକ୍ତରଙ୍କୁ ଆମନ୍ତ୍ରଣ କରନ୍ତୁ" : "Invite Doctors",
+                "Invite Doctors",
                 style: context.titleMd?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: context.onPrimary,
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                // Dynamic High-Contrast Button
                 backgroundColor: context.colorScheme.onSurface,
                 foregroundColor: context.colorScheme.onPrimary,
                 elevation: 0,

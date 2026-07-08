@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:my_new_app/core/utils/theme_utils.dart';
 import '../../../../models/doctor_model.dart';
 
 class ClinicLocationCard extends StatelessWidget {
@@ -30,23 +32,28 @@ class ClinicLocationCard extends StatelessWidget {
     required this.isOdia,
   });
 
+  Future<void> _openDirections() async {
+    if (currentLat == 0.0 && currentLng == 0.0) return;
+    final uri = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$currentLat,$currentLng',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    const Color primaryColor = Color.fromARGB(255, 22, 96, 255);
-    const Color greenColor = Color(0xFF16A34A);
-    final borderColor = isDarkMode ? Colors.white10 : Colors.grey.shade200;
+    final scheme = Theme.of(context).colorScheme;
+    final border = scheme.outlineVariant.withValues(alpha: 0.5);
+    final hasMap = currentLat != 0.0 && currentLng != 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (doctor.locations.isNotEmpty) ...[
-          _buildSectionTitle(
-            context,
-            isOdia ? "କ୍ଲିନିକ୍ ବାଛନ୍ତୁ" : "Select Clinic",
-            isDarkMode,
-          ),
-          const SizedBox(height: 16),
+        if (doctor.locations.length > 1) ...[
+          _sectionTitle(context, isOdia ? "କ୍ଲିନିକ୍ ବାଛନ୍ତୁ" : "Select Clinic"),
+          const SizedBox(height: 14),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -58,49 +65,50 @@ class ClinicLocationCard extends StatelessWidget {
                 final isSelected = selectedIndex == index;
 
                 return Padding(
-                  padding: const EdgeInsets.only(right: 12.0),
+                  padding: const EdgeInsets.only(right: 10),
                   child: GestureDetector(
                     onTap: () => onClinicChanged(index),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 12,
+                        horizontal: 16,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? primaryColor
-                            : (isDarkMode
-                                  ? const Color(0xFF1E1E1E)
-                                  : Colors.white),
-                        borderRadius: BorderRadius.circular(30),
+                        color: isSelected ? scheme.primary : scheme.surface,
+                        borderRadius: BorderRadius.circular(999),
                         border: Border.all(
-                          color: isSelected ? primaryColor : borderColor,
+                          color: isSelected ? scheme.primary : border,
                           width: 1.5,
                         ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: scheme.primary.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : const [],
                       ),
                       child: Row(
                         children: [
                           Icon(
                             isSelected
-                                ? LucideIcons.checkCircle2
+                                ? Icons.check_circle_rounded
                                 : LucideIcons.mapPin,
                             size: 16,
                             color: isSelected
-                                ? Colors.white
-                                : (isDarkMode
-                                      ? Colors.grey.shade400
-                                      : Colors.grey.shade600),
+                                ? scheme.onPrimary
+                                : scheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 8),
                           Text(
                             clinicName,
                             style: TextStyle(
                               color: isSelected
-                                  ? Colors.white
-                                  : (isDarkMode
-                                        ? Colors.white70
-                                        : Colors.black87),
+                                  ? scheme.onPrimary
+                                  : scheme.onSurface,
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.w600,
@@ -115,38 +123,53 @@ class ClinicLocationCard extends StatelessWidget {
               }),
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
         ],
 
-        _buildSectionTitle(
-          context,
-          isOdia ? "ଠିକଣା ଏବଂ ମ୍ୟାପ୍" : "Clinic Location",
-          isDarkMode,
+        Row(
+          children: [
+            Expanded(
+              child: _sectionTitle(
+                context,
+                isOdia ? "ଠିକଣା ଏବଂ ମ୍ୟାପ୍" : "Clinic Location",
+              ),
+            ),
+            if (hasMap)
+              TextButton.icon(
+                onPressed: _openDirections,
+                icon: const Icon(Icons.directions_rounded, size: 16),
+                label: Text(isOdia ? "ଦିଗ" : "Directions"),
+                style: TextButton.styleFrom(
+                  foregroundColor: scheme.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Container(
           clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+            color: scheme.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: borderColor),
+            border: Border.all(color: border),
           ),
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(18),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: primaryColor.withValues(alpha: 0.1),
+                        color: scheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         LucideIcons.mapPin,
-                        color: primaryColor,
+                        color: scheme.primary,
                         size: 22,
                       ),
                     ),
@@ -160,7 +183,7 @@ class ClinicLocationCard extends StatelessWidget {
                             style: TextStyle(
                               fontWeight: FontWeight.w900,
                               fontSize: 16,
-                              color: isDarkMode ? Colors.white : Colors.black87,
+                              color: scheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -168,9 +191,7 @@ class ClinicLocationCard extends StatelessWidget {
                             currentClinicAddress,
                             style: TextStyle(
                               fontSize: 13,
-                              color: isDarkMode
-                                  ? Colors.grey.shade400
-                                  : Colors.blueGrey.shade600,
+                              color: scheme.onSurfaceVariant,
                               height: 1.5,
                             ),
                           ),
@@ -182,24 +203,26 @@ class ClinicLocationCard extends StatelessWidget {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: greenColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(8),
+                                color: AppPalette.success500.withValues(
+                                  alpha: 0.10,
+                                ),
+                                borderRadius: BorderRadius.circular(999),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     LucideIcons.navigation,
                                     size: 14,
-                                    color: greenColor,
+                                    color: AppPalette.success700,
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
                                     currentDistance,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
-                                      color: greenColor,
+                                      color: AppPalette.success700,
                                     ),
                                   ),
                                 ],
@@ -212,65 +235,110 @@ class ClinicLocationCard extends StatelessWidget {
                   ],
                 ),
               ),
-              if (currentLat != 0.0 && currentLng != 0.0)
-                SizedBox(
-                  height: 180,
-                  width: double.infinity,
-                  child: FlutterMap(
-                    mapController: mapController,
-                    options: MapOptions(
-                      initialCenter: LatLng(currentLat, currentLng),
-                      initialZoom: 16.5,
-                      interactionOptions: const InteractionOptions(
-                        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              if (hasMap)
+                Stack(
+                  children: [
+                    SizedBox(
+                      height: 180,
+                      width: double.infinity,
+                      child: FlutterMap(
+                        mapController: mapController,
+                        options: MapOptions(
+                          initialCenter: LatLng(currentLat, currentLng),
+                          initialZoom: 16.5,
+                          interactionOptions: const InteractionOptions(
+                            flags:
+                                InteractiveFlag.all & ~InteractiveFlag.rotate,
+                          ),
+                        ),
+                        children: [
+                          TileLayer(
+                            urlTemplate:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
+                                : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            userAgentPackageName: 'com.jivan.app',
+                          ),
+                          MarkerLayer(
+                            markers: [
+                              Marker(
+                                point: LatLng(currentLat, currentLng),
+                                width: 140,
+                                height: 140,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: scheme.primary,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        isOdia ? "କ୍ଲିନିକ୍" : "Clinic",
+                                        style: TextStyle(
+                                          color: scheme.onPrimary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.location_on,
+                                      color: scheme.primary,
+                                      size: 42,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    children: [
-                      TileLayer(
-                        urlTemplate: isDarkMode
-                            ? 'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
-                            : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        userAgentPackageName: 'com.jivan.app',
-                      ),
-                      MarkerLayer(
-                        markers: [
-                          Marker(
-                            point: LatLng(currentLat, currentLng),
-                            width: 140,
-                            height: 140,
-                            child: Column(
+                    // Floating Directions button
+                    Positioned(
+                      right: 12,
+                      bottom: 12,
+                      child: Material(
+                        color: scheme.surface,
+                        borderRadius: BorderRadius.circular(12),
+                        elevation: 3,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _openDirections,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.black87,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Text(
-                                    "Clinic",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                Icon(
+                                  Icons.directions_rounded,
+                                  size: 16,
+                                  color: scheme.primary,
                                 ),
-                                const Icon(
-                                  Icons.location_on,
-                                  color: Colors.redAccent,
-                                  size: 45,
+                                const SizedBox(width: 6),
+                                Text(
+                                  isOdia ? "ଦିଗ ପାଆନ୍ତୁ" : "Get Directions",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: scheme.primary,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
             ],
           ),
@@ -279,18 +347,30 @@ class ClinicLocationCard extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(
-    BuildContext context,
-    String title,
-    bool isDarkMode,
-  ) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-        fontWeight: FontWeight.w900,
-        fontSize: 18,
-        color: isDarkMode ? Colors.white : Colors.black87,
-      ),
+  Widget _sectionTitle(BuildContext context, String title) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontSize: 18,
+              color: scheme.onSurface,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
