@@ -21,20 +21,26 @@ class FooterInviteSection extends StatelessWidget {
     // ─── CONTENT TEXTS ──────────────────────────────────────────
     final String shareText = isOdia
         ? 'ଡାକ୍ତର ନିଯୁକ୍ତି ଏବଂ ଔଷଧ ପାଇଁ ଜୀବନ ଆପ୍ ବ୍ୟବହାର କରନ୍ତୁ! ମୋର ଲିଙ୍କ୍ ରୁ ଡାଉନଲୋଡ୍ କରନ୍ତୁ: https://play.google.com/store/apps/details?id=website.jivan.jivanapp.my_new_app&hl=en_IN'
-        : 'Book top doctors easily with the Jivan App! Download using my link: https://play.google.com/store/apps/details?id=website.jivan.jivanapp.my_new_app&hl=en_IN';
+        : 'Book top doctors easily with the Soudamini Healthcare App! Download using my link: https://play.google.com/store/apps/details?id=website.jivan.jivanapp.my_new_app&hl=en_IN';
 
     final String subText = isOdia
-    ? 'ଆପଣଙ୍କ ସାଙ୍ଗ ଏବଂ ପରିବାରକୁ ଜୀବନ ଆପ୍ ସହିତ ଯୋଡନ୍ତୁ। ଦରକାର ସମୟରେ ସହଜରେ ଭଲ ଡାକ୍ତର ଦେଖାଇବାରେ ସେମାନଙ୍କୁ ସାହାଯ୍ୟ କରନ୍ତୁ।'
-    : 'Share the gift of health! Onboard your friends and family to the Jivan App and help them easily access the best doctors whenever they need.';
+        ? 'ଆପଣଙ୍କ ସାଙ୍ଗ ଏବଂ ପରିବାରକୁ ଜୀବନ ଆପ୍ ସହିତ ଯୋଡନ୍ତୁ। ଦରକାର ସମୟରେ ସହଜରେ ଭଲ ଡାକ୍ତର ଦେଖାଇବାରେ ସେମାନଙ୍କୁ ସାହାଯ୍ୟ କରନ୍ତୁ।'
+        : 'Share the gift of health! Onboard your friends and family to the Soudamini Healthcare App and help them easily access the best doctors whenever they need.';
 
     // ─── ACTIONS ────────────────────────────────────────────────
     void handleShare() {
-      Share.share(shareText, subject: isOdia ? 'ଜୀବନ ଆପ୍' : 'Join Jivan App');
+      Share.share(
+        shareText,
+        subject: isOdia ? 'ଜୀବନ ଆପ୍' : 'Join Soudamini Healthcare App',
+      );
     }
 
     void handleCopy() async {
       await Clipboard.setData(
-        const ClipboardData(text: 'https://play.google.com/store/apps/details?id=website.jivan.jivanapp.my_new_app&hl=en_IN'),
+        const ClipboardData(
+          text:
+              'https://play.google.com/store/apps/details?id=website.jivan.jivanapp.my_new_app&hl=en_IN',
+        ),
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -67,7 +73,9 @@ class FooterInviteSection extends StatelessWidget {
               ),
               children: [
                 TextSpan(
-                  text: isOdia ? "ନିଜ ପ୍ରିୟଜନଙ୍କୁ ଆମନ୍ତ୍ରଣ କରନ୍ତୁ ଓ " : "Invite loved ones & ",
+                  text: isOdia
+                      ? "ନିଜ ପ୍ରିୟଜନଙ୍କୁ ଆମନ୍ତ୍ରଣ କରନ୍ତୁ ଓ "
+                      : "Invite loved ones & ",
                 ),
                 TextSpan(
                   text: isOdia ? "ଉତ୍ତମ ସ୍ୱାସ୍ଥ୍ୟ" : "share good health",

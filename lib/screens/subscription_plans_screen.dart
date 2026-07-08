@@ -28,7 +28,7 @@ class _SubscriptionPlansScreenState extends State<SubscriptionPlansScreen> {
       "period": "Forever",
       "desc": "Perfect for new clinics.",
       "features": [
-        "Full clinic listing on Jivan App.",
+        "Full clinic listing on Soudamini Healthcare App.",
         "Manage doctor profiles.",
         "Basic patient attraction tools.",
         "Standard search visibility.",

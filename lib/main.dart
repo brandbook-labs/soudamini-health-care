@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
     final languageController = Provider.of<LanguageController>(context);
 
     return MaterialApp(
-      title: 'Jivan App',
+      title: 'Soudamini Healthcare App',
       debugShowCheckedModeBanner: false,
 
       // --- 1. THEME CONFIGURATION (Clean & Atomic) ---

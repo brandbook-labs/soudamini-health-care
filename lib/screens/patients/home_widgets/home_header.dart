@@ -53,15 +53,18 @@ class _HomeHeaderState extends State<HomeHeader> {
     // 🚀 [SUPER SENIOR UI FIX]: ଡିସପ୍ଲେ କରିବା ପୂର୍ବରୁ ଲୋକେସନ୍ କୁ ଫିଲ୍ଟର୍ କରନ୍ତୁ
     // =======================================================================
     String rawLocation = userProvider.fullAddress;
-    
-    bool isInvalidDisplayCity = rawLocation.isEmpty ||
+
+    bool isInvalidDisplayCity =
+        rawLocation.isEmpty ||
         rawLocation.contains("Locating") ||
         rawLocation.contains("Found") ||
         rawLocation.contains("Unavailable") ||
         rawLocation.replaceAll(",", "").trim().isEmpty;
 
     // ଯଦି ଗୁଗଲ୍ ଖରାପ ଡାଟା ଦେଇଛି ବା Location Found ଅଛି, ତେବେ Current Location ଦେଖାନ୍ତୁ
-    final String userLocation = isInvalidDisplayCity ? "Current Location" : rawLocation;
+    final String userLocation = isInvalidDisplayCity
+        ? "Current Location"
+        : rawLocation;
 
     bool isHome = widget.currentIndex == 0;
     String title = "";
@@ -83,7 +86,7 @@ class _HomeHeaderState extends State<HomeHeader> {
         title = isOdia ? "ମୋ ପ୍ରୋଫାଇଲ୍" : "My Profile";
         break;
       default:
-        title = "Jivan App";
+        title = "Soudamini Healthcare App";
     }
 
     final borderColor = context.colorScheme.outline.withValues(alpha: 0.2);
@@ -148,7 +151,8 @@ class _HomeHeaderState extends State<HomeHeader> {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => LocationPickerScreen(currentCity: userLocation),
+                          builder: (context) =>
+                              LocationPickerScreen(currentCity: userLocation),
                           fullscreenDialog: true,
                         ),
                       );
@@ -162,25 +166,32 @@ class _HomeHeaderState extends State<HomeHeader> {
 
                           if (result is Map) {
                             // 🚀 ଯଦି City ନାମ ଖାଲି ଥାଏ ବା "Location Found" ଆସେ, "Current Location" ଦେଖାଇବ
-                            String tempCity = result['city']?.toString().trim() ?? "";
+                            String tempCity =
+                                result['city']?.toString().trim() ?? "";
 
                             // 🚀 [SUPER SENIOR BULLETPROOF CHECK]
-                            // ଯଦି ଟେକ୍ସଟ୍ ସମ୍ପୂର୍ଣ୍ଣ ଖାଲି ଅଛି, କିମ୍ବା କେବଳ କମା/ସ୍ପେସ୍ ଅଛି, 
+                            // ଯଦି ଟେକ୍ସଟ୍ ସମ୍ପୂର୍ଣ୍ଣ ଖାଲି ଅଛି, କିମ୍ବା କେବଳ କମା/ସ୍ପେସ୍ ଅଛି,
                             // ବା ଆମର କୌଣସି ଫଲବ୍ୟାକ୍ ଏରର୍ ଟେକ୍ସଟ୍ ଅଛି...
-                            bool isInvalidCity = tempCity.isEmpty ||
+                            bool isInvalidCity =
+                                tempCity.isEmpty ||
                                 tempCity.contains("Locating") ||
                                 tempCity.contains("Found") ||
                                 tempCity.contains("Unavailable") ||
                                 tempCity.replaceAll(",", "").trim().isEmpty;
 
                             // ଯଦି ଅବୈଧ ଟେକ୍ସଟ୍ ଆସେ, ତେବେ ସୁନ୍ଦର ଭାବରେ "Current Location" ଦେଖାଇବ
-                            cleanCity = isInvalidCity ? "Current Location" : tempCity;
+                            cleanCity = isInvalidCity
+                                ? "Current Location"
+                                : tempCity;
 
                             // ସୁରକ୍ଷିତ ଭାବରେ ଡବଲ୍ କୁ କନଭର୍ଟ କରିବା
-                            finalLat = double.tryParse(result['lat'].toString()) ?? 0.0;
-                            finalLng = double.tryParse(result['lng'].toString()) ?? 0.0;
-                          } 
-                          else if (result is String) {
+                            finalLat =
+                                double.tryParse(result['lat'].toString()) ??
+                                0.0;
+                            finalLng =
+                                double.tryParse(result['lng'].toString()) ??
+                                0.0;
+                          } else if (result is String) {
                             cleanCity = result.trim();
                           }
 
