@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 // --- NEW IMPORTS ---
@@ -11,6 +12,7 @@ const Color kPrimaryColor = Color.fromARGB(255, 22, 96, 255); // Blue-600
 const Color kOrangeColor = Color(0xFFEA580C);
 const Color kGreenColor = Color(0xFF16A34A);
 const Color kRedColor = Color(0xFFEF4444);
+const Color kWhatsAppColor = Color(0xFF25D366);
 
 // Dark Mode Colors
 const Color kDarkBg = Color(0xFF151515);
@@ -133,6 +135,9 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
+  // Tracks which quick-action button is currently running ('whatsapp' | 'scan' | 'call' | null)
+  String? _loadingAction;
+
   void _toggleCart(int id) {
     setState(() {
       if (_cart.contains(id)) {
@@ -153,44 +158,108 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
 
   // --- ACTIONS ---
 
+  void _showActionSnackBar({
+    required IconData icon,
+    required String message,
+    required Color color,
+  }) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: color,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        elevation: 6,
+        content: Row(
+          children: [
+            Icon(icon, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _openWhatsApp() async {
-    final Uri url = Uri.parse("https://wa.me/919692664009");
-    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch WhatsApp")),
-        );
-      }
+    if (_loadingAction != null) return;
+    HapticFeedback.lightImpact();
+    setState(() => _loadingAction = 'whatsapp');
+    final Uri url = Uri.parse(
+      "https://wa.me/919692664009?text=${Uri.encodeComponent("Hi, I'd like to order medicines.")}",
+    );
+    try {
+      final launched = await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!launched) throw Exception('launch_failed');
+    } catch (e) {
+      _showActionSnackBar(
+        icon: LucideIcons.alertTriangle,
+        message: "Couldn't open WhatsApp. Is it installed on this device?",
+        color: kRedColor,
+      );
+    } finally {
+      if (mounted) setState(() => _loadingAction = null);
     }
   }
 
   Future<void> _makePhoneCall() async {
+    if (_loadingAction != null) return;
+    HapticFeedback.lightImpact();
+    setState(() => _loadingAction = 'call');
     final Uri url = Uri.parse("tel:+919692664009");
-    if (!await launchUrl(url)) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Could not launch Dialer")),
-        );
-      }
+    try {
+      final launched = await launchUrl(url);
+      if (!launched) throw Exception('launch_failed');
+    } catch (e) {
+      _showActionSnackBar(
+        icon: LucideIcons.alertTriangle,
+        message: "Couldn't start the call. Try +91 96926 64009 manually.",
+        color: kRedColor,
+      );
+    } finally {
+      if (mounted) setState(() => _loadingAction = null);
     }
   }
 
   Future<void> _openCamera() async {
+    if (_loadingAction != null) return;
+    HapticFeedback.lightImpact();
+    setState(() => _loadingAction = 'scan');
     try {
-      final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
+      final XFile? photo = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+      );
       if (photo != null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Prescription Captured: ${photo.name}")),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Camera permission denied")),
+        _showActionSnackBar(
+          icon: LucideIcons.checkCircle2,
+          message: "Prescription captured. We'll verify it shortly.",
+          color: kGreenColor,
         );
       }
+    } catch (e) {
+      _showActionSnackBar(
+        icon: LucideIcons.alertTriangle,
+        message: "Camera permission denied. Enable it in Settings to scan.",
+        color: kRedColor,
+      );
+    } finally {
+      if (mounted) setState(() => _loadingAction = null);
     }
   }
 
@@ -225,32 +294,14 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
                       decoration: const BoxDecoration(
                         color: Color(0xFF001E3C), // Deep Navy for contrast
                         borderRadius: BorderRadius.vertical(
-                          bottom: Radius.circular(32),
+                          bottom: Radius.circular(0),
                         ),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: -50,
-                            right: -50,
-                            child: _buildBlurCircle(
-                              kPrimaryColor.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: -50,
-                            left: -50,
-                            child: _buildBlurCircle(
-                              kOrangeColor.withValues(alpha: 0.1),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
 
                     // Content
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 0),
+                      padding: const EdgeInsets.fromLTRB(16, 40, 16, 0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -312,46 +363,9 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
                 ),
               ),
 
-              // --- 2. OFFERS SECTION ---
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildOfferCard(
-                          title: "25% OFF",
-                          subtitle: "App Only",
-                          icon: LucideIcons.smartphone,
-                          color: kPrimaryColor,
-                          bg: isDarkMode ? kDarkCard : Colors.blue.shade50,
-                          textColor: textColor,
-                          isDarkMode: isDarkMode,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildOfferCard(
-                          title: "23% OFF",
-                          subtitle: "Code: 23NUFIT",
-                          icon: LucideIcons.zap,
-                          color: kOrangeColor,
-                          bg: isDarkMode ? kDarkCard : Colors.orange.shade50,
-                          textColor: textColor,
-                          isDarkMode: isDarkMode,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // --- 3. PRODUCTS HEADER ---
+              // --- 2. PRODUCTS HEADER ---
               SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 28, 16, 0),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
                     Row(
@@ -380,15 +394,15 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
                 ),
               ),
 
-              // --- 4. ENHANCED PRODUCT GRID ---
+              // --- 3. ENHANCED PRODUCT GRID ---
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 50),
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.62, // Taller card for better layout
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
                   ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final product = MOCK_PRODUCTS[index];
@@ -408,7 +422,7 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
             ],
           ),
 
-          // --- 5. STICKY CART FOOTER ---
+          // --- 4. STICKY CART FOOTER ---
           if (_cart.isNotEmpty)
             Positioned(
               bottom: 0,
@@ -425,7 +439,7 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 20,
+                      blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
                   ],
@@ -520,15 +534,15 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: borderColor),
         boxShadow: isDarkMode
             ? []
             : [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 6),
                 ),
               ],
       ),
@@ -539,7 +553,7 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
             height: 50,
             decoration: BoxDecoration(
               color: isDarkMode ? kDarkBg : kLightBg,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: borderColor),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -586,32 +600,57 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+
+          // Section label for quick actions
+          Row(
+            children: [
+              Icon(LucideIcons.sparkles, size: 13, color: subTextColor),
+              const SizedBox(width: 6),
+              Text(
+                "Need help right now?",
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: subTextColor,
+                  letterSpacing: 0.2,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
 
           // Action Buttons
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildActionButton(
-                LucideIcons.messageCircle,
-                "WhatsApp",
-                const Color(0xFF25D366),
-                isDarkMode,
+                icon: LucideIcons.messageCircle,
+                label: "WhatsApp",
+                subtitle: "Chat & order",
+                color: kWhatsAppColor,
+                isDarkMode: isDarkMode,
+                actionKey: 'whatsapp',
                 onTap: _openWhatsApp,
               ),
               const SizedBox(width: 12),
               _buildActionButton(
-                LucideIcons.camera,
-                "Scan Rx",
-                kPrimaryColor,
-                isDarkMode,
+                icon: LucideIcons.camera,
+                label: "Scan Rx",
+                subtitle: "Upload prescription",
+                color: kPrimaryColor,
+                isDarkMode: isDarkMode,
+                actionKey: 'scan',
                 onTap: _openCamera,
               ),
               const SizedBox(width: 12),
               _buildActionButton(
-                LucideIcons.phone,
-                "Call Now",
-                kPrimaryColor,
-                isDarkMode,
+                icon: LucideIcons.phone,
+                label: "Call Now",
+                subtitle: "Speak to us",
+                color: kPrimaryColor,
+                isDarkMode: isDarkMode,
+                actionKey: 'call',
                 onTap: _makePhoneCall,
               ),
             ],
@@ -621,111 +660,84 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
     );
   }
 
-  Widget _buildActionButton(
-    IconData icon,
-    String label,
-    Color color,
-    bool isDarkMode, {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Color color,
+    required bool isDarkMode,
+    required String actionKey,
     VoidCallback? onTap,
   }) {
+    final bool isLoading = _loadingAction == actionKey;
+    final bool isDisabled = _loadingAction != null && !isLoading;
+
     return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? Colors.white.withValues(alpha: 0.05)
-                  : color.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: color.withValues(alpha: 0.2)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: isDisabled ? 0.45 : 1,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isDisabled ? null : onTap,
+            borderRadius: BorderRadius.circular(8),
+            splashColor: color.withValues(alpha: 0.15),
+            highlightColor: color.withValues(alpha: 0.08),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    height: 36,
+                    width: 36,
+                    child: isLoading
+                        ? Padding(
+                            padding: const EdgeInsets.all(9),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: color,
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(icon, size: 20, color: color),
+                          ),
                   ),
-                  child: Icon(icon, size: 20, color: color),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                      color: isDarkMode
+                          ? Colors.grey.shade500
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildOfferCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required Color bg,
-    required Color textColor,
-    required bool isDarkMode,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: isDarkMode
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : Colors.white,
-              shape: BoxShape.circle,
-              boxShadow: isDarkMode
-                  ? []
-                  : [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.2),
-                        blurRadius: 10,
-                      ),
-                    ],
-            ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: textColor,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: color,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -743,20 +755,11 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: isAdded ? kPrimaryColor : borderColor),
-        boxShadow: isDarkMode
-            ? []
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(8),
         child: Stack(
           children: [
             // Background Decoration for Image
@@ -957,17 +960,6 @@ class _MedicineShopScreenState extends State<MedicineShopScreen> {
                                   : Colors.transparent,
                             ),
                             borderRadius: BorderRadius.circular(10),
-                            boxShadow: isAdded
-                                ? []
-                                : [
-                                    BoxShadow(
-                                      color: kPrimaryColor.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      blurRadius: 6,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
                           ),
                           child: Text(
                             isAdded ? "ADDED" : "ADD",

@@ -9,6 +9,7 @@ import 'package:my_new_app/screens/patients/doctors_list_screen.dart';
 import 'package:my_new_app/screens/patients/home_screen.dart';
 import 'package:my_new_app/screens/patients/home_widgets/home_header.dart';
 import 'package:my_new_app/screens/patients/labs/lab_listing_screen.dart';
+import 'package:my_new_app/screens/patients/medicine_shop_screen.dart';
 import 'package:my_new_app/screens/patients/profile/profile_screen.dart';
 import 'package:my_new_app/services/location_service.dart';
 import 'package:my_new_app/services/update_service.dart';
@@ -84,7 +85,7 @@ class _MainLayoutState extends State<MainLayout>
   List<Widget> get _screens => [
     HomeScreen(onTabChange: _onNavTap),
     const DoctorsListScreen(),
-    const ClinicsListingScreen(),
+    const MedicineShopScreen(),
     const LabListingScreen(),
     const ProfileScreen(),
   ];
