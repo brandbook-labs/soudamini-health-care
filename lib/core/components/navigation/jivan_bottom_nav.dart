@@ -1,84 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
-import 'package:provider/provider.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
-import '../../../../controllers/language_controller.dart';
 
 class JivanBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
-
-  // Changed from bool isAdmin to String userRole
-  // Values: 'patient', 'admin', 'super_admin'
-  final String userRole;
+  final String userRole; // 'patient', 'admin', 'super_admin'
 
   const JivanBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
-    this.userRole = 'patient', // Default to patient
+    this.userRole = 'patient',
   });
 
   @override
   Widget build(BuildContext context) {
-    // 1. Language Listener
-    bool isOdia = false;
-    try {
-      final locale = context.watch<LanguageController>().currentLocale;
-      isOdia = locale.languageCode == 'or';
-    } catch (_) {
-      isOdia = false;
-    }
-
-    // 2. DEFINE MENUS
-
     // A. Patient Menu
     final List<Map<String, dynamic>> patientItems = [
-      {"icon": LucideIcons.home, "label": isOdia ? "ମୁଖ୍ୟ" : "Home"},
-      {"icon": LucideIcons.stethoscope, "label": isOdia ? "ଡାକ୍ତର" : "Doctors"},
-      {"icon": LucideIcons.building2, "label": isOdia ? "କ୍ଲିନିକ" : "Clinics"},
-      {"icon": LucideIcons.flaskConical, "label": isOdia ? "ଲ୍ୟାବ୍" : "Labs"},
-      {"icon": LucideIcons.user, "label": isOdia ? "ପ୍ରୋଫାଇଲ୍" : "Profile"},
+      {"icon": LucideIcons.home, "label": "Home"},
+      {"icon": LucideIcons.stethoscope, "label": "Doctors"},
+      {"icon": LucideIcons.tablets, "label": "Medicines"},
+      {"icon": LucideIcons.flaskConical, "label": "Labs"},
+      {"icon": LucideIcons.user, "label": "Profile"},
     ];
 
-    // B. Admin (Clinic) Menu - Updated exactly as requested
+    // B. Admin (Clinic) Menu
     final List<Map<String, dynamic>> adminItems = [
-      {
-        "icon": LucideIcons.layoutDashboard,
-        "label": isOdia ? "ଡ୍ୟାସବୋର୍ଡ" : "Home",
-      },
-      {
-        "icon": LucideIcons.receipt, // 🚀 ସୁରକ୍ଷିତ ଆଇକନ୍ (କୌଣସି ଏରର୍ ଆସିବ ନାହିଁ)
-        "label": isOdia ? "ବିଲିଂ" : "Billing",
-      },
-      {
-        "icon": LucideIcons.lineChart, 
-        "label": isOdia ? "ବିଶ୍ଳେଷଣ" : "Analytics", // ସଠିକ୍ ଓଡ଼ିଆ ଅନୁବାଦ
-      },
-      {
-        "icon": LucideIcons.users, 
-        "label": isOdia ? "ରୋଗୀ" : "Patients",
-      },
-      {
-        "icon": LucideIcons.settings,
-        "label": isOdia ? "ସେଟିଙ୍ଗସ୍" : "Settings",
-      },
+      {"icon": LucideIcons.layoutDashboard, "label": "Home"},
+      {"icon": LucideIcons.receipt, "label": "Billing"},
+      {"icon": LucideIcons.lineChart, "label": "Analytics"},
+      {"icon": LucideIcons.users, "label": "Patients"},
+      {"icon": LucideIcons.settings, "label": "Settings"},
     ];
 
     // C. Super Admin (Platform Owner) Menu
     final List<Map<String, dynamic>> superAdminItems = [
-      {"icon": LucideIcons.barChart3, "label": "Overview"}, // Global Stats
-      {"icon": LucideIcons.store, "label": "Clinics"}, // Manage Clinics
-      {"icon": LucideIcons.users, "label": "Users"}, // Manage Doctors/Patients
-      {
-        "icon": LucideIcons.shieldCheck,
-        "label": "Approvals",
-      }, // Pending Requests
+      {"icon": LucideIcons.barChart3, "label": "Overview"},
+      {"icon": LucideIcons.store, "label": "Clinics"},
+      {"icon": LucideIcons.users, "label": "Users"},
+      {"icon": LucideIcons.shieldCheck, "label": "Approvals"},
       {"icon": LucideIcons.user, "label": "Profile"},
     ];
 
-    // 3. SELECT MENU BASED ON ROLE
     List<Map<String, dynamic>> items;
     if (userRole == 'super_admin') {
       items = superAdminItems;
@@ -88,36 +53,50 @@ class JivanBottomNav extends StatelessWidget {
       items = patientItems;
     }
 
-    final bgColor = context.colorScheme.surface;
-    final borderColor = context.colorScheme.outlineVariant.withValues(
-      alpha: 0.2,
-    );
+    // Handle OS bottom safe areas (e.g., iPhone home indicator)
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
 
     return Container(
-      height: 80,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 10),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: context.colorScheme.surface,
+        // Crisp, subtle top border to separate nav from content
         border: Border(
           top: BorderSide(
-            color: context.colorScheme.outline.withValues(alpha: 0.15),
+            color: context.colorScheme.outlineVariant.withOpacity(0.4),
             width: 1,
           ),
         ),
+        // Soft ambient shadow for depth without being overpowering
+        boxShadow: [
+          BoxShadow(
+            color: context.colorScheme.shadow.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (index) {
-          return _NavBarItem(
-            icon: items[index]['icon'] as IconData,
-            label: items[index]['label'] as String,
-            isSelected: currentIndex == index,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              onTap(index);
-            },
-          );
-        }),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64, // Standard, predictable hit-target height
+          child: Row(
+            children: List.generate(items.length, (index) {
+              return Expanded(
+                child: _NavBarItem(
+                  icon: items[index]['icon'] as IconData,
+                  label: items[index]['label'] as String,
+                  isSelected: currentIndex == index,
+                  onTap: () {
+                    if (currentIndex != index) {
+                      HapticFeedback.selectionClick();
+                      onTap(index);
+                    }
+                  },
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -138,39 +117,78 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = context.colorScheme.primary;
-    final unselectedColor = context.colorScheme.onSurfaceVariant;
+    final activeColor = context.colorScheme.primary;
+    final inactiveColor = context.colorScheme.onSurfaceVariant;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Material(
+      color: Colors.transparent,
+      // InkWell provides native, accessible touch feedback (ripple)
+      child: InkWell(
+        onTap: onTap,
+        highlightColor: Colors.transparent,
+        splashColor: activeColor.withOpacity(0.05),
+        child: Stack(
           children: [
-            AnimatedScale(
-              scale: isSelected ? 1.1 : 1.0,
-              duration: const Duration(milliseconds: 200),
-              curve: Curves.easeOutBack,
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected ? selectedColor : unselectedColor,
+            // 1. Top Highlight Indicator
+            // Anchored to the top, expands smoothly when selected
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  height: 3,
+                  width: isSelected ? 32 : 0,
+                  decoration: BoxDecoration(
+                    color: activeColor,
+                    borderRadius: const BorderRadius.vertical(
+                      bottom: Radius.circular(4),
+                    ),
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 4),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: context.text.labelSmall!.copyWith(
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                color: isSelected ? selectedColor : unselectedColor,
-                fontSize: 10,
+
+            // 2. Icon and Text
+            // Static positioning prevents jarring layout shifts
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    transitionBuilder: (child, animation) {
+                      return ScaleTransition(scale: animation, child: child);
+                    },
+                    child: Icon(
+                      icon,
+                      key: ValueKey<bool>(isSelected),
+                      size: 24,
+                      color: isSelected ? activeColor : inactiveColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: context.text.labelSmall!.copyWith(
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: isSelected ? activeColor : inactiveColor,
+                      fontSize: 11,
+                      letterSpacing: 0.1,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              child: Text(label),
             ),
           ],
         ),

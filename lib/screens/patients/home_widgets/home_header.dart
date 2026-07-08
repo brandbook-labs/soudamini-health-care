@@ -2,16 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
-import 'package:my_new_app/screens/location/location_picker_screen.dart';
 import 'package:my_new_app/screens/patients/notifications_screen.dart';
-import 'package:my_new_app/controllers/language_controller.dart';
 import 'package:my_new_app/core/components/index.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
-
-// 🚀 UserProvider Import
 import 'package:my_new_app/screens/patients/providers/user_provider.dart';
-// 🚀 NEW: DoctorProvider Import (ତୁରନ୍ତ ସର୍ଚ୍ଚ କରିବା ପାଇଁ)
-import 'package:my_new_app/screens/patients/providers/doctor_provider.dart';
 
 class HomeHeader extends StatefulWidget {
   final int currentIndex;
@@ -36,285 +30,258 @@ class _HomeHeaderState extends State<HomeHeader> {
     });
   }
 
+  /// 🚀 SMART UX: Dynamic Time-Based Greeting
+  String _getTimeBasedGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good Morning 👋";
+    if (hour < 17) return "Good Afternoon ☀️";
+    if (hour < 21) return "Good Evening 🌙";
+    return "Good Night 💤";
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isOdia =
-        context.watch<LanguageController>().currentLocale.languageCode == 'or';
-
-    // 🚀 Provider ରୁ ଡାଟା ଲିସିନ୍ (Listen) କରାଯାଉଛି
     final userProvider = context.watch<UserProvider>();
-
-    final String userName = userProvider.userName;
+    final String userName = userProvider.userName.isNotEmpty
+        ? userProvider.userName
+        : "Guest";
     final String userProfileImage = userProvider.userProfileImage;
-    // final String userLocation = userProvider.fullAddress;
-    final bool isLoadingLocation = userProvider.isLoadingLocation;
 
-    // =======================================================================
-    // 🚀 [SUPER SENIOR UI FIX]: ଡିସପ୍ଲେ କରିବା ପୂର୍ବରୁ ଲୋକେସନ୍ କୁ ଫିଲ୍ଟର୍ କରନ୍ତୁ
-    // =======================================================================
-    String rawLocation = userProvider.fullAddress;
+    final bool isHome = widget.currentIndex == 0;
 
-    bool isInvalidDisplayCity =
-        rawLocation.isEmpty ||
-        rawLocation.contains("Locating") ||
-        rawLocation.contains("Found") ||
-        rawLocation.contains("Unavailable") ||
-        rawLocation.replaceAll(",", "").trim().isEmpty;
-
-    // ଯଦି ଗୁଗଲ୍ ଖରାପ ଡାଟା ଦେଇଛି ବା Location Found ଅଛି, ତେବେ Current Location ଦେଖାନ୍ତୁ
-    final String userLocation = isInvalidDisplayCity
-        ? "Current Location"
-        : rawLocation;
-
-    bool isHome = widget.currentIndex == 0;
+    // 🚀 Dynamic Contextual Titles
+    String subtitle = "";
     String title = "";
 
     switch (widget.currentIndex) {
       case 0:
-        title = isOdia ? "ନମସ୍କାର, $userName" : "Hello, $userName";
+        subtitle = _getTimeBasedGreeting();
+        title = userName;
         break;
       case 1:
-        title = isOdia ? "ଡାକ୍ତର ଖୋଜନ୍ତୁ" : "Find Doctors";
+        subtitle = "Specialists";
+        title = "Find Doctors";
         break;
       case 2:
-        title = isOdia ? "ନିକଟସ୍ଥ କ୍ଲିନିକ" : "Nearby Clinics";
+        subtitle = "Healthcare";
+        title = "Nearby Clinics";
         break;
       case 3:
-        title = isOdia ? "ପାଥୋଲୋଜି ଲ୍ୟାବ" : "Pathology Labs";
+        subtitle = "Diagnostics";
+        title = "Pathology Labs";
         break;
       case 4:
-        title = isOdia ? "ମୋ ପ୍ରୋଫାଇଲ୍" : "My Profile";
+        subtitle = "Account";
+        title = "My Profile";
         break;
       default:
-        title = "Soudamini Healthcare App";
+        subtitle = "Welcome";
+        title = "Soudamini Health";
     }
 
-    final borderColor = context.colorScheme.outline.withValues(alpha: 0.2);
-
-    return Container(
-      decoration: BoxDecoration(
+    return SafeArea(
+      bottom: false,
+      child: Container(
         color: context.theme.scaffoldBackgroundColor,
-        // border: Border(bottom: BorderSide(color: borderColor)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              if (isHome)
-                JivanAvatar(
-                  size: 48,
-                  imageUrl: userProfileImage.isNotEmpty
-                      ? userProfileImage
-                      : 'https://ui-avatars.com/api/?name=$userName&background=random',
-                  name: userName,
-                )
-              else
-                GestureDetector(
-                  onTap: widget.onBackTap,
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: const BoxDecoration(shape: BoxShape.circle),
-                    child: Icon(
-                      LucideIcons.arrowLeft,
-                      color: context.colorScheme.onSurface,
-                      size: 20,
-                    ),
-                  ),
-                ),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // ---------------------------------------------------------
+            // 1. SMART AVATAR / BACK BUTTON
+            // ---------------------------------------------------------
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) =>
+                  ScaleTransition(scale: animation, child: child),
+              child: isHome
+                  ? _buildProfileAvatar(context, userProfileImage, userName)
+                  : _buildBackButton(context),
+            ),
 
-              const SizedBox(width: 12),
+            const SizedBox(width: 16),
 
-              Column(
+            // ---------------------------------------------------------
+            // 2. DYNAMIC TEXT HIERARCHY
+            // ---------------------------------------------------------
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Muted Contextual Subtitle
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 250),
+                    child: Text(
+                      subtitle,
+                      key: ValueKey<String>("sub_$subtitle"),
+                      style: context.text.labelMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  const SizedBox(height: 2),
+
+                  // Bold Primary Title
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),
                     child: Text(
                       title,
-                      key: ValueKey<String>(title),
-                      style: context.text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      key: ValueKey<String>("title_$title"),
+                      style: context.text.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.5,
+                        color: context.colorScheme.onSurface,
+                        height: 1.1,
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-
-                  // ========================================================
-                  // 🚀 LOCATION PICKER BUTTON
-                  // ========================================================
-                  GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              LocationPickerScreen(currentCity: userLocation),
-                          fullscreenDialog: true,
-                        ),
-                      );
-
-                      // 🚀 [SUPER SENIOR LOGIC]: ୧୦୦% ବୁଲେଟ୍ ପ୍ରୁଫ୍ (Bulletproof)
-                      if (result != null) {
-                        if (mounted) {
-                          String cleanCity = "";
-                          double finalLat = 0.0;
-                          double finalLng = 0.0;
-
-                          if (result is Map) {
-                            // 🚀 ଯଦି City ନାମ ଖାଲି ଥାଏ ବା "Location Found" ଆସେ, "Current Location" ଦେଖାଇବ
-                            String tempCity =
-                                result['city']?.toString().trim() ?? "";
-
-                            // 🚀 [SUPER SENIOR BULLETPROOF CHECK]
-                            // ଯଦି ଟେକ୍ସଟ୍ ସମ୍ପୂର୍ଣ୍ଣ ଖାଲି ଅଛି, କିମ୍ବା କେବଳ କମା/ସ୍ପେସ୍ ଅଛି,
-                            // ବା ଆମର କୌଣସି ଫଲବ୍ୟାକ୍ ଏରର୍ ଟେକ୍ସଟ୍ ଅଛି...
-                            bool isInvalidCity =
-                                tempCity.isEmpty ||
-                                tempCity.contains("Locating") ||
-                                tempCity.contains("Found") ||
-                                tempCity.contains("Unavailable") ||
-                                tempCity.replaceAll(",", "").trim().isEmpty;
-
-                            // ଯଦି ଅବୈଧ ଟେକ୍ସଟ୍ ଆସେ, ତେବେ ସୁନ୍ଦର ଭାବରେ "Current Location" ଦେଖାଇବ
-                            cleanCity = isInvalidCity
-                                ? "Current Location"
-                                : tempCity;
-
-                            // ସୁରକ୍ଷିତ ଭାବରେ ଡବଲ୍ କୁ କନଭର୍ଟ କରିବା
-                            finalLat =
-                                double.tryParse(result['lat'].toString()) ??
-                                0.0;
-                            finalLng =
-                                double.tryParse(result['lng'].toString()) ??
-                                0.0;
-                          } else if (result is String) {
-                            cleanCity = result.trim();
-                          }
-
-                          // ଏହିଠାରେ ଆମେ ସଠିକ୍ ଡାଟା UserProvider କୁ ଦେଉଛୁ
-                          context.read<UserProvider>().updateManualLocation(
-                            context,
-                            cleanCity,
-                            finalLat,
-                            finalLng,
-                          );
-
-                          JivanToast.show(
-                            context,
-                            title: "Location Updated",
-                            message: "Exploring near $cleanCity",
-                          );
-                        }
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Icon(
-                          LucideIcons.mapPin,
-                          size: 12,
-                          color: context.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          userLocation,
-                          style: context.text.bodySmall?.copyWith(
-                            color: isHome
-                                ? context.colorScheme.onSurface.withValues(
-                                    alpha: 0.6,
-                                  )
-                                : context.colorScheme.primary,
-                            fontWeight: isHome
-                                ? FontWeight.normal
-                                : FontWeight.w600,
-                          ),
-                        ),
-                        if (isLoadingLocation) ...[
-                          const SizedBox(width: 6),
-                          SizedBox(
-                            width: 10,
-                            height: 10,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 1.5,
-                              color: context.colorScheme.primary,
-                            ),
-                          ),
-                        ],
-                        if (isHome && !isLoadingLocation) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 16,
-                            color: context.colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                          ),
-                        ],
-                      ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
               ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // ---------------------------------------------------------
+            // 3. PREMIUM NOTIFICATION ACTION
+            // ---------------------------------------------------------
+            _buildNotificationBell(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- SUB-COMPONENTS FOR CLEAN CODE ---
+
+  Widget _buildProfileAvatar(
+    BuildContext context,
+    String imageUrl,
+    String name,
+  ) {
+    return Stack(
+      key: const ValueKey('avatar'),
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: context.colorScheme.primary.withOpacity(0.15),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
+          child: JivanAvatar(
+            size: 48,
+            imageUrl: imageUrl.isNotEmpty
+                ? imageUrl
+                : 'https://ui-avatars.com/api/?name=$name&background=random',
+            name: name,
+          ),
+        ),
+        // Smart "Online" / Active Indicator
+        Positioned(
+          bottom: 0,
+          right: 2,
+          child: Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: context.semantic.success ?? Colors.green,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: context.theme.scaffoldBackgroundColor,
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-          Row(
+  Widget _buildBackButton(BuildContext context) {
+    return Material(
+      key: const ValueKey('back_btn'),
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: widget.onBackTap,
+        borderRadius: BorderRadius.circular(100),
+        child: Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: context.colorScheme.surface,
+            border: Border.all(
+              color: context.colorScheme.outlineVariant.withOpacity(0.6),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            LucideIcons.arrowLeft,
+            color: context.colorScheme.onSurface,
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationBell(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+        ),
+        borderRadius: BorderRadius.circular(100),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            // Soft background for a modern glass/neumorphic feel
+            color: context.colorScheme.onSurface.withOpacity(0.04),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              IconButton(
-                onPressed: () =>
-                    context.read<LanguageController>().toggleLanguage(),
-                icon: Icon(
-                  Icons.translate,
-                  color: isOdia
-                      ? context.colorScheme.primary
-                      : context.colorScheme.onSurfaceVariant,
-                  size: 22,
-                ),
+              Icon(
+                LucideIcons.bell,
+                color: context.colorScheme.onSurface,
+                size: 22,
               ),
-
-              GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsScreen(),
-                  ),
-                ),
+              // Unread Badge
+              Positioned(
+                right: 12,
+                top: 10,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(
-                    // color: context.theme.cardColor,
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: context.colorScheme.error,
                     shape: BoxShape.circle,
-                    // border: Border.all(color: borderColor),
-                  ),
-                  child: Stack(
-                    children: [
-                      Icon(
-                        LucideIcons.bell,
-                        color: context.colorScheme.onSurface,
-                        size: 22,
-                      ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
+                    border: Border.all(
+                      color: context.theme.scaffoldBackgroundColor,
+                      width: 1.5,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -10,7 +10,6 @@ export 'display/jivan_avatar.dart';
 export 'display/jivan_divider.dart';
 export 'display/jivan_icon_box.dart';
 export 'display/jivan_section_header.dart';
-export '../../screens/patients/home_widgets/JoinJivan.dart';
 export 'display/jivanFilterChip.dart';
 export 'layout/jivan_card.dart';
 export 'layout/jivan_list_tile.dart';

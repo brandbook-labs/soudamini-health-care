@@ -1,19 +1,16 @@
 // lib/screens/patients/profile/widgets/logged_in_view.dart
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 
 import 'package:my_new_app/screens/patients/appointments/my_appointments_screen.dart';
 import 'package:my_new_app/screens/patients/edit_profile_screen.dart';
 import 'package:my_new_app/screens/patients/medical_records/manage_records_screen.dart';
-import 'package:my_new_app/screens/patients/medical_records/my_doctors_screen.dart';
-import 'package:my_new_app/screens/patients/reviews/patient_reviews_screen.dart';
-
-// 🚀 Provider
-import 'package:provider/provider.dart';
 import 'package:my_new_app/screens/patients/providers/user_provider.dart';
-
-// --- NEW IMPORTS ---
+import 'package:my_new_app/core/utils/theme_utils.dart';
 import '../profile_settings_screen.dart';
 
 class LoggedInView extends StatelessWidget {
@@ -34,379 +31,525 @@ class LoggedInView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    // 🚀 Provider Data
     String userName = userProvider.userName;
     final String userPhone = userProvider.userPhone;
     final String userAvatarUrl = userProvider.userProfileImage;
-    final bool isVerified = true;
 
-    // Handle Empty Name
     final bool isNameEmpty =
         userName.trim().isEmpty || userName.toLowerCase() == "guest";
-    if (isNameEmpty) userName = "Complete Your Profile";
+    if (isNameEmpty) userName = "Guest\nUser.";
 
-    final bgColor = isDark ? const Color(0xFF09090B) : const Color(0xFFF8FAFC);
-    final sectionBgColor = isDark ? const Color(0xFF18181B) : Colors.white;
+    // Split name for dramatic typography (first name on one line, last name on another if possible)
+    final nameParts = userName.split(' ');
+    final dramaticName = nameParts.length > 1
+        ? '${nameParts[0]}\n${nameParts.sublist(1).join(' ')}.'
+        : '$userName.';
 
-    return Container(
-      color: bgColor,
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ==========================================
-            // 1. SAAS-STYLE HEADER (Left Aligned, Clean)
-            // ==========================================
-            Container(
-              width: double.infinity,
-              color: sectionBgColor,
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Row(
-                children: [
-                  // Avatar
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark ? Colors.white10 : Colors.grey.shade200,
-                        width: 1,
-                      ),
-                      color: isDark ? Colors.black26 : const Color(0xFFF1F5F9),
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: userAvatarUrl.isNotEmpty
-                            ? CachedNetworkImageProvider(userAvatarUrl)
-                            : const NetworkImage(
-                                    "https://ui-avatars.com/api/?name=User&background=random",
-                                  )
-                                  as ImageProvider,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
+    return Scaffold(
+      backgroundColor: context.theme.scaffoldBackgroundColor,
+      // 1. THE AMBIENT GLOW BACKGROUND
+      body: Stack(
+        children: [
+          // Top Right Glow (Primary Color)
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: context.colorScheme.primary.withOpacity(0.15),
+              ),
+            ),
+          ),
+          // Bottom Left Glow (Purple/Secondary)
+          Positioned(
+            top: 300,
+            left: -150,
+            child: Container(
+              width: 350,
+              height: 350,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0xFF7C3AED), // Vibrant Purple
+              ),
+            ),
+          ),
+          // The Glass Layer covering the glows
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
 
-                  // User Info
-                  Expanded(
-                    child: Column(
+          // 2. THE EDITORIAL CONTENT
+          SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 20.0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- HEADER SECTION ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                userName,
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w800,
-                                  color: isNameEmpty
-                                      ? colorScheme.primary
-                                      : (isDark
-                                            ? Colors.white
-                                            : const Color(0xFF0F172A)),
-                                  fontStyle: isNameEmpty
-                                      ? FontStyle.italic
-                                      : FontStyle.normal,
-                                  letterSpacing: -0.5,
+                        // Dramatic Typography
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
-                                overflow: TextOverflow.ellipsis,
+                                decoration: BoxDecoration(
+                                  color: context.colorScheme.onSurface,
+                                  borderRadius: BorderRadius.circular(100),
+                                ),
+                                child: Text(
+                                  "VERIFIED PATIENT",
+                                  style: TextStyle(
+                                    color:
+                                        context.theme.scaffoldBackgroundColor,
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
                               ),
-                            ),
-                            if (!isNameEmpty && isVerified) ...[
-                              const SizedBox(width: 6),
-                              const Icon(
-                                Icons.verified,
-                                color: Colors.blue,
-                                size: 18,
+                              const SizedBox(height: 16),
+                              Text(
+                                dramaticName,
+                                style: context.text.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  height: 1.0,
+                                  letterSpacing: -2.0,
+                                  color: context.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // High-tech phone badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: context.colorScheme.outlineVariant,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  userPhone,
+                                  style: context.text.labelMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily:
+                                        'monospace', // Adds a cool tech vibe
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
                               ),
                             ],
-                          ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          userPhone,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: isDark
-                                ? Colors.grey.shade300
-                                : const Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
+
+                        // Oversized Avatar
+                        GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const EditProfileScreen(),
+                            ),
+                          ).then((_) => onProfileUpdated()),
+                          child: Stack(
+                            alignment: Alignment.bottomRight,
+                            children: [
+                              Container(
+                                width: 100,
+                                height: 100,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: context.colorScheme.primary
+                                        .withOpacity(0.5),
+                                    width: 4,
+                                  ),
+                                  image: DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: userAvatarUrl.isNotEmpty
+                                        ? CachedNetworkImageProvider(
+                                            userAvatarUrl,
+                                          )
+                                        : const NetworkImage(
+                                                "https://ui-avatars.com/api/?name=User&background=random",
+                                              )
+                                              as ImageProvider,
+                                  ),
+                                ),
+                              ),
+                              // Edit Floating Action
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: context.colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: context.colorScheme.primary
+                                          .withOpacity(0.4),
+                                      blurRadius: 12,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: const Icon(
+                                  LucideIcons.pencil,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
 
-                  // Edit Button
-                  IconButton(
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const EditProfileScreen(),
-                      ),
-                    ).then((_) => onProfileUpdated()),
-                    icon: Icon(
-                      LucideIcons.pencil,
-                      color: isDark ? Colors.white : const Color(0xFF0F172A),
-                      size: 20,
-                    ),
-                    style: IconButton.styleFrom(
-                      backgroundColor: isDark
-                          ? Colors.white10
-                          : Colors.grey.shade100,
-                      padding: const EdgeInsets.all(10),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 48),
 
-            const SizedBox(height: 12), // Space before lists
-            // ==========================================
-            // 2. PRIMARY ACTIONS (Edge-to-Edge List)
-            // ==========================================
-            Container(
-              color: sectionBgColor,
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: LucideIcons.calendarDays,
-                    iconBgColor: Colors.blue,
-                    title: "Appointments",
-                    subtitle: "Manage your upcoming visits",
-                    isDark: isDark,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MyAppointmentsScreen(),
-                      ),
-                    ),
-                  ),
-                  _buildMenuItem(
-                    icon: LucideIcons.folderOpen,
-                    iconBgColor: Colors.purple,
-                    title: "Medical Records",
-                    subtitle: "Prescriptions and lab reports",
-                    isDark: isDark,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ManageRecordsScreen(),
-                      ),
-                    ),
-                  ),
-                  _buildMenuItem(
-                    icon: LucideIcons.pill,
-                    iconBgColor: Colors.teal,
-                    title: "Medicine Orders",
-                    subtitle: "Track your pharmacy deliveries",
-                    isComingSoon: true,
-                    isDark: isDark,
-                    showDivider: false, // Last item in this group
-                    onTap: () {},
-                  ),
-                ],
-              ),
-            ),
+                    // --- DRAMATIC ACTION CARDS ---
 
-            const SizedBox(height: 12), // Group Separator
-            // ==========================================
-            // 3. SECONDARY ACTIONS
-            // ==========================================
-            Container(
-              color: sectionBgColor,
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: LucideIcons.users,
-                    iconBgColor: Colors.orange,
-                    title: "My Doctors",
-                    subtitle: "Your saved specialists",
-                    isDark: isDark,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MyDoctorsScreen(),
-                      ),
-                    ),
-                  ),
-                  _buildMenuItem(
-                    icon: LucideIcons.star,
-                    iconBgColor: Colors.amber,
-                    title: "My Reviews",
-                    subtitle: "Feedback you've shared",
-                    isDark: isDark,
-                    showDivider: false,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PatientReviewsScreen(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // ==========================================
-            // 4. ACCOUNT & SETTINGS
-            // ==========================================
-            Container(
-              color: sectionBgColor,
-              child: Column(
-                children: [
-                  _buildMenuItem(
-                    icon: LucideIcons.settings,
-                    iconBgColor: Colors.grey.shade600,
-                    title: "Settings",
-                    subtitle: "Biometrics and app preferences",
-                    isDark: isDark,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => ProfileSettingsScreen(
-                          isBiometricEnabled: isBiometricEnabled,
-                          onToggleBiometrics: onToggleBiometrics,
-                          onLogout: onLogout,
+                    // 1. Hero Action Card (Appointments)
+                    _EditorialCard(
+                      title: "Appointments",
+                      subtitle: "Manage your upcoming visits",
+                      icon: LucideIcons.calendarClock,
+                      accentColor: context.colorScheme.primary,
+                      isDarkFilled: true,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MyAppointmentsScreen(),
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 16),
+
+                    // 2. Twin Cards Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _EditorialCard(
+                            title: "Records",
+                            subtitle: "Labs & Rx",
+                            icon: LucideIcons.folderHeart,
+                            accentColor: const Color(0xFF7C3AED),
+                            height: 160,
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ManageRecordsScreen(),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _EditorialCard(
+                            title: "Medicines",
+                            subtitle: "Coming Soon",
+                            icon: LucideIcons.pill,
+                            accentColor: const Color(0xFF059669),
+                            height: 160,
+                            isMuted: true,
+                            onTap: () {},
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 3. Settings Horizontal Strip
+                    _EditorialStrip(
+                      title: "App Settings & Security",
+                      icon: LucideIcons.fingerprint,
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ProfileSettingsScreen(
+                            isBiometricEnabled: isBiometricEnabled,
+                            onToggleBiometrics: onToggleBiometrics,
+                            onLogout: onLogout,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // 4. Logout Strip
+                    _EditorialStrip(
+                      title: "Log Out",
+                      icon: LucideIcons.power,
+                      isDestructive: true,
+                      onTap: onLogout,
+                    ),
+
+                    const SizedBox(height: 60),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// DRAMATIC UI COMPONENTS
+// ============================================================================
+
+/// A bold, magazine-style card with an oversized, clipped background icon.
+class _EditorialCard extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accentColor;
+  final bool isDarkFilled;
+  final bool isMuted;
+  final double height;
+  final VoidCallback onTap;
+
+  const _EditorialCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accentColor,
+    required this.onTap,
+    this.isDarkFilled = false,
+    this.isMuted = false,
+    this.height = 140,
+  });
+
+  @override
+  State<_EditorialCard> createState() => _EditorialCardState();
+}
+
+class _EditorialCardState extends State<_EditorialCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDarkMode = context.theme.brightness == Brightness.dark;
+
+    // Determine colors based on style
+    final Color bgColor = widget.isDarkFilled
+        ? widget.accentColor
+        : (isDarkMode
+              ? Colors.white.withOpacity(0.05)
+              : Colors.white.withOpacity(0.6));
+
+    final Color textColor = widget.isDarkFilled
+        ? Colors.white
+        : context.colorScheme.onSurface;
+
+    final Color subTextColor = widget.isDarkFilled
+        ? Colors.white70
+        : context.colorScheme.onSurfaceVariant;
+
+    return GestureDetector(
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        setState(() => _isPressed = true);
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20), // Glassmorphism
+            child: Container(
+              height: widget.height,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: widget.isMuted ? bgColor.withOpacity(0.2) : bgColor,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: widget.isDarkFilled
+                      ? Colors.transparent
+                      : Colors.white.withOpacity(isDarkMode ? 0.1 : 0.4),
+                  width: 1.5,
+                ),
+              ),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // --- THE OVERSIZED WATERMARK ICON ---
+                  Positioned(
+                    right: -30,
+                    bottom: -30,
+                    child: Transform.rotate(
+                      angle: -0.2,
+                      child: Icon(
+                        widget.icon,
+                        size: widget.height * 0.9,
+                        color: widget.isDarkFilled
+                            ? Colors.black.withOpacity(0.15)
+                            : widget.accentColor.withOpacity(0.1),
+                      ),
+                    ),
                   ),
-                  _buildMenuItem(
-                    icon: LucideIcons.logOut,
-                    iconBgColor: Colors.red.shade500,
-                    title: "Log Out",
-                    subtitle: "Sign out securely from your device",
-                    textColor: Colors.red.shade600,
-                    isDark: isDark,
-                    showDivider: false,
-                    onTap: onLogout,
+
+                  // --- THE CONTENT ---
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Icon(
+                        widget.icon,
+                        color: widget.isMuted
+                            ? subTextColor.withOpacity(0.5)
+                            : textColor,
+                        size: 28,
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.subtitle.toUpperCase(),
+                            style: TextStyle(
+                              color: widget.isMuted
+                                  ? subTextColor.withOpacity(0.5)
+                                  : subTextColor,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            widget.title,
+                            style: context.text.titleLarge?.copyWith(
+                              color: widget.isMuted
+                                  ? textColor.withOpacity(0.5)
+                                  : textColor,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
+}
 
-  // --- NATIVE WHATSAPP/IOS STYLE MENU ITEM ---
-  Widget _buildMenuItem({
-    required IconData icon,
-    required Color iconBgColor,
-    required String title,
-    required String subtitle, // 👈 NEW: Subtext added
-    required VoidCallback onTap,
-    required bool isDark,
-    Color? textColor,
-    bool isComingSoon = false,
-    bool showDivider = true,
-  }) {
-    final baseColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final mutedColor = isDark ? Colors.grey.shade300 : const Color(0xFF64748B);
-    final dividerColor = isDark ? Colors.white10 : Colors.grey.shade200;
+/// A sleek, minimalistic horizontal strip for actions like Settings and Logout.
+class _EditorialStrip extends StatefulWidget {
+  final String title;
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool isDestructive;
 
-    return InkWell(
-      onTap: isComingSoon ? null : onTap,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            child: Row(
-              children: [
-                // Rounded Square Icon (SaaS/Native look)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: isComingSoon
-                        ? mutedColor.withValues(alpha: 0.2)
-                        : iconBgColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 20,
-                    color: isComingSoon
-                        ? mutedColor.withValues(alpha: 0.5)
-                        : iconBgColor,
-                  ),
-                ),
-                const SizedBox(width: 12),
+  const _EditorialStrip({
+    required this.title,
+    required this.icon,
+    required this.onTap,
+    this.isDestructive = false,
+  });
 
-                // Texts
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: isComingSoon
-                              ? mutedColor.withValues(alpha: 0.5)
-                              : (textColor ?? baseColor),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: isComingSoon
-                              ? mutedColor.withValues(alpha: 0.3)
-                              : mutedColor,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+  @override
+  State<_EditorialStrip> createState() => _EditorialStripState();
+}
 
-                // Trailing Action
-                if (isComingSoon)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.white10 : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      "COMING SOON",
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: isDark
-                            ? Colors.grey.shade300
-                            : const Color(0xFF64748B),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  )
-                else if (title != "Log Out")
-                  Icon(
-                    LucideIcons.chevronRight,
-                    size: 18,
-                    color: mutedColor.withValues(alpha: 0.4),
-                  ),
-              ],
+class _EditorialStripState extends State<_EditorialStrip> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = widget.isDestructive
+        ? context.colorScheme.error
+        : context.colorScheme.onSurface;
+
+    return GestureDetector(
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        setState(() => _isPressed = true);
+      },
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedOpacity(
+        opacity: _isPressed ? 0.6 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: widget.isDestructive
+                ? color.withOpacity(0.1)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: widget.isDestructive
+                  ? color.withOpacity(0.3)
+                  : context.colorScheme.outlineVariant,
+              width: 1,
             ),
           ),
-
-          // Indented Divider (Starts after the icon to mimic native OS settings)
-        ],
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(widget.icon, color: color, size: 22),
+                  const SizedBox(width: 16),
+                  Text(
+                    widget.title,
+                    style: context.text.titleMedium?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
+              Icon(
+                LucideIcons.arrowRight,
+                color: color.withOpacity(0.5),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
