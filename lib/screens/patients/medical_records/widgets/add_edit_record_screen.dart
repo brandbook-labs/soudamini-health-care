@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/add_edit_record_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:my_new_app/screens/admin/admin_widgets/slots/widgets/time_box.dart';
 import 'package:my_new_app/screens/patients/booking/booking_success_screen.dart';

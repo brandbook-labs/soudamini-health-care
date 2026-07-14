@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/patients/doctor_profile/doctor_profile_screen.dart';
 
 import 'package:my_new_app/services/api_service.dart'; 

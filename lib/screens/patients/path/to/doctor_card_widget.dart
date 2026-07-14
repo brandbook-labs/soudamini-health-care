@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
 import 'package:my_new_app/screens/patients/booking/appointment_booking_screen.dart';
 import 'package:shimmer/shimmer.dart';

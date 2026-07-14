@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:my_new_app/screens/patients/providers/user_provider.dart'; 
 import 'package:provider/provider.dart';
-import 'package:lucide_icons/lucide_icons.dart'; 
+import 'package:lucide_icons_flutter/lucide_icons.dart'; 
 import 'package:share_plus/share_plus.dart'; 
 
 import 'package:my_new_app/controllers/language_controller.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/services/api_service.dart';
 import 'package:my_new_app/screens/super_admin/clinics/add_clinic_screen.dart';
 import 'package:my_new_app/screens/subscription_plans_screen.dart';

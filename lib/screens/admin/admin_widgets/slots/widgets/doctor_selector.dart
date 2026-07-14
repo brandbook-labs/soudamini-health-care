@@ -1,6 +1,6 @@
 // lib/screens/slots/widgets/doctor_selector.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DoctorSelector extends StatelessWidget {
   final List<Map<String, dynamic>> doctorList;

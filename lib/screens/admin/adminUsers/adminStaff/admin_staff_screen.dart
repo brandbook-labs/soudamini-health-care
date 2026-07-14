@@ -1,6 +1,6 @@
 // lib/screens/admin/adminUsers/adminStaff/admin_staff_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/admin/admin_layout.dart';
 
 // --- IMPORTS ---
@@ -243,27 +243,27 @@ class _AdminStaffScreenState extends State<AdminStaffScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
-                  leading: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(LucideIcons.link, color: Colors.blue),
-                  ),
-                  title: const Text("Link Existing Staff", style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle: Text("Search and add someone already on the Jivan platform.", style: TextStyle(fontSize: 12, color: theme.hintColor)),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const LinkStaffScreen()),
-                    );
-                    _fetchStaff();
-                  },
-                ),
+                // ListTile(
+                //   contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                //   leading: Container(
+                //     padding: const EdgeInsets.all(10),
+                //     decoration: BoxDecoration(
+                //       color: Colors.blue.withValues(alpha: 0.1),
+                //       shape: BoxShape.circle,
+                //     ),
+                //     child: const Icon(LucideIcons.link, color: Colors.blue),
+                //   ),
+                //   title: const Text("Link Existing Staff", style: TextStyle(fontWeight: FontWeight.w600)),
+                //   subtitle: Text("Search and add someone already on the Jivan platform.", style: TextStyle(fontSize: 12, color: theme.hintColor)),
+                //   onTap: () async {
+                //     Navigator.pop(ctx);
+                //     await Navigator.push(
+                //       context,
+                //       MaterialPageRoute(builder: (context) => const LinkStaffScreen()),
+                //     );
+                //     _fetchStaff();
+                //   },
+                // ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
                   leading: Container(

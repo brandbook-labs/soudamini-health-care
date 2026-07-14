@@ -1,13 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:my_new_app/core/constants/app_config.dart'; // 🚀 ଇମ୍ପୋର୍ଟ କରନ୍ତୁ
 import 'package:my_new_app/models/staff_model.dart';
 import '../models/clinic_model.dart';
 import '../models/doctor_model.dart';
 
 class ApiService {
-  // final String _baseUrl = 'http://localhost:5000/api/v2/';
-  final String _baseUrl = 'https://api.jivan.website/api/v2/';
+  final String _baseUrl = 'http://localhost:5000/api/v2/';
+  // final String _baseUrl = 'https://api.jivan.website/api/v2/';
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -15,6 +16,18 @@ class ApiService {
     _dio.options.baseUrl = _baseUrl;
     _dio.options.connectTimeout = const Duration(seconds: 10);
     _dio.options.receiveTimeout = const Duration(seconds: 10);
+
+    // =========================================================
+    // 🚀 THE MAGIC: DIO INTERCEPTOR (For 100+ APIs)
+    // ଏହା ସବୁ ଆଉଟଗୋଇଙ୍ଗ୍ ରିକ୍ୱେଷ୍ଟ୍ (outgoing request) ରେ ଆପେ ଆପେ ହେଡର୍ ଯୋଡିଦେବ!
+    // =========================================================
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        // ଡାଇନାମିକ୍ ହେଡର୍ ସେଟ୍ କରାଗଲା
+        options.headers['x-tenant-slug'] = AppConfig.tenantSlug;
+        return handler.next(options); // ରିକ୍ୱେଷ୍ଟ୍ କୁ ଆଗକୁ ବଢିବାକୁ ଦିଅନ୍ତୁ
+      },
+    ));
   }
 
   // --- INTERNAL HELPERS (Reduces Boilerplate) ---

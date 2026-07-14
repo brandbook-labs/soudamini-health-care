@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/my_care_team/dossier_empty_state.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DossierEmptyState extends StatelessWidget {
   const DossierEmptyState({super.key});

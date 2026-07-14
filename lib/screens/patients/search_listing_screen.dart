@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/patients/path/to/clinic_card_widget.dart';
 import 'package:my_new_app/screens/patients/path/to/doctor_card_widget.dart';
 import 'package:shimmer/shimmer.dart';

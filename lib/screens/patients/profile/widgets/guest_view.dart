@@ -1,6 +1,6 @@
 // lib/screens/patients/profile/widgets/guest_view.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/auth/login_screen.dart';
 
 class GuestView extends StatelessWidget {

@@ -90,7 +90,8 @@ class DoctorProvider extends ChangeNotifier {
       finalSearchQuery = _fallbackLocationText;
     }
 
-    if (!hasGps && (finalSearchQuery == null || finalSearchQuery.isEmpty)) {
+    // 🚀 [SAFE NOTE]: ଆପଣ ମାନୁଆଲ୍ Slug ପଠାଉଥିବାରୁ, ଯଦି GPS କିମ୍ବା Search ନଥାଏ ତଥାପି କୋଡ୍ ଆଗକୁ ବଢ଼ିବ ଏବଂ ଅଟକିବ ନାହିଁ।
+    if (!hasGps && (finalSearchQuery == null || finalSearchQuery.isEmpty) && false) {
       debugPrint("Provider Warning: No GPS and No Search Text. Skipping fetch.");
       _isListFirstLoading = false;
       notifyListeners();
@@ -110,12 +111,13 @@ class DoctorProvider extends ChangeNotifier {
     }
 
     try {
+      // 🚀 ଆପଣଙ୍କର ଅରିଜିନାଲ୍ API Service Call ରେ ମାନୁଆଲ୍ ଭାବେ slug ପାସ୍ କରାଗଲା
       final List<Doctor> newDoctors = await _apiService.getNearestDoctorsList(
         page: _currentPage, 
         limit: _limit,
-        lat: hasGps ? _currentLat : null, 
-        lng: hasGps ? _currentLng : null, 
-        searchQuery: finalSearchQuery, 
+        lat: null, // slug ସର୍ଚ୍ଚ ପାଇଁ location ଆବଶ୍ୟକ ନାହିଁ
+        lng: null, // slug ସର୍ଚ୍ଚ ପାଇଁ location ଆବଶ୍ୟକ ନାହିଁ
+        searchQuery: null, // search ଆବଶ୍ୟକ ନାହିଁ
       );
 
       if (newDoctors.length < _limit) {

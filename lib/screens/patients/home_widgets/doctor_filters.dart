@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
 import 'package:my_new_app/screens/patients/providers/doctor_provider.dart';
 
@@ -8,7 +8,7 @@ import 'package:my_new_app/screens/patients/providers/doctor_provider.dart';
 class FilterState {
   String query;
   String sortBy;
-  String clinic;
+  // 🚀 Clinic property removed
   String specialty;
   bool isAvailableToday;
   bool isAvailableTomorrow;
@@ -16,7 +16,6 @@ class FilterState {
   FilterState({
     this.query = '',
     this.sortBy = 'relevance',
-    this.clinic = 'All',
     this.specialty = 'All',
     this.isAvailableToday = false,
     this.isAvailableTomorrow = false,
@@ -25,7 +24,6 @@ class FilterState {
   bool get hasActiveFilters {
     return query.isNotEmpty ||
         sortBy != 'relevance' ||
-        clinic != 'All' ||
         specialty != 'All' ||
         isAvailableToday ||
         isAvailableTomorrow;
@@ -34,7 +32,6 @@ class FilterState {
   FilterState copyWith({
     String? query,
     String? sortBy,
-    String? clinic,
     String? specialty,
     bool? isAvailableToday,
     bool? isAvailableTomorrow,
@@ -42,7 +39,6 @@ class FilterState {
     return FilterState(
       query: query ?? this.query,
       sortBy: sortBy ?? this.sortBy,
-      clinic: clinic ?? this.clinic,
       specialty: specialty ?? this.specialty,
       isAvailableToday: isAvailableToday ?? this.isAvailableToday,
       isAvailableTomorrow: isAvailableTomorrow ?? this.isAvailableTomorrow,
@@ -53,14 +49,14 @@ class FilterState {
 // --- MAIN WIDGET ---
 class DoctorFilters extends StatefulWidget {
   final FilterState currentFilters;
+  final List<String> departments; // 🚀 Now accepts raw Strings from parent
   final Function(FilterState) onFilterChanged;
-  final List<String> clinics;
 
   const DoctorFilters({
     super.key,
     required this.currentFilters,
+    required this.departments, 
     required this.onFilterChanged,
-    this.clinics = const [],
   });
 
   @override
@@ -68,20 +64,12 @@ class DoctorFilters extends StatefulWidget {
 }
 
 class _DoctorFiltersState extends State<DoctorFilters> {
-  @override
-  void initState() {
-    super.initState();
-    // Ask the provider to fetch departments once (no-op if already cached).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DoctorProvider>().fetchDepartmentsOnce();
-    });
-  }
+  // 🚀 API Call for departments removed completely from initState
 
   void _update(FilterState newState) => widget.onFilterChanged(newState);
 
   bool get _hasTechnicalFilters =>
       widget.currentFilters.sortBy != 'relevance' ||
-      widget.currentFilters.clinic != 'All' ||
       widget.currentFilters.isAvailableToday ||
       widget.currentFilters.isAvailableTomorrow;
 
@@ -89,7 +77,6 @@ class _DoctorFiltersState extends State<DoctorFilters> {
     _update(
       widget.currentFilters.copyWith(
         sortBy: 'relevance',
-        clinic: 'All',
         isAvailableToday: false,
         isAvailableTomorrow: false,
       ),
@@ -99,16 +86,12 @@ class _DoctorFiltersState extends State<DoctorFilters> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    final doctorProvider = context.watch<DoctorProvider>();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 1. DEPARTMENT CARDS (cached)
-        _buildSquareDepartmentCards(
-          doctorProvider.isLoadingDepartments,
-          doctorProvider.departments,
-        ),
+        // 1. DEPARTMENT CARDS (Dynamic from Doctor List)
+        _buildSquareDepartmentCards(widget.departments),
 
         context.gapXs,
 
@@ -131,22 +114,7 @@ class _DoctorFiltersState extends State<DoctorFilters> {
                 isActive: widget.currentFilters.sortBy != 'relevance',
                 onTap: () => _showSortSheet(context),
               ),
-              context.gapXs,
-              _buildFilterButton(
-                context,
-                label: widget.currentFilters.clinic == 'All'
-                    ? "Clinic"
-                    : widget.currentFilters.clinic,
-                icon: Icons.apartment_rounded,
-                isActive: widget.currentFilters.clinic != 'All',
-                onTap: () => _showSelectionSheet(
-                  context,
-                  "Select Clinic",
-                  widget.clinics,
-                  (val) => _update(widget.currentFilters.copyWith(clinic: val)),
-                  widget.currentFilters.clinic,
-                ),
-              ),
+              // 🚀 Clinic Filter Button Removed
               context.gapXs,
               _buildToggleChip(
                 context: context,
@@ -199,18 +167,9 @@ class _DoctorFiltersState extends State<DoctorFilters> {
   }
 
   // =========================================================================
-  // DEPARTMENT CARDS
+  // 🚀 DYNAMIC DEPARTMENT CARDS
   // =========================================================================
-  Widget _buildSquareDepartmentCards(
-    bool isLoading,
-    List<dynamic> departments,
-  ) {
-    if (isLoading) {
-      return const SizedBox(
-        height: 110,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
+  Widget _buildSquareDepartmentCards(List<String> departments) {
     if (departments.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
@@ -231,10 +190,7 @@ class _DoctorFiltersState extends State<DoctorFilters> {
             );
           }
 
-          final deptData = departments[index - 1];
-          final String rawDepartment = deptData['department']?.toString() ?? "";
-          final String iconString =
-              deptData['department_icon']?.toString() ?? "";
+          final String rawDepartment = departments[index - 1];
 
           final String formattedName = rawDepartment
               .split('-')
@@ -251,7 +207,7 @@ class _DoctorFiltersState extends State<DoctorFilters> {
 
           return _buildSingleSquareCard(
             title: formattedName,
-            iconData: _getLucideIconFromString(iconString),
+            iconData: _getLucideIconFromString(rawDepartment), // Fallback to Stethoscope if not matched
             isSelected: isSelected,
             onTap: () => _update(
               widget.currentFilters.copyWith(specialty: formattedName),
@@ -345,14 +301,18 @@ class _DoctorFiltersState extends State<DoctorFilters> {
       case 'ear':
         return LucideIcons.ear;
       case 'heart-pulse':
+      case 'cardiology': // Added mapping for common department string
         return LucideIcons.heartPulse;
       case 'bone':
+      case 'orthopedics':
         return LucideIcons.bone;
       case 'eye':
+      case 'ophthalmology':
         return LucideIcons.eye;
       case 'droplet':
         return LucideIcons.droplet;
       case 'brain':
+      case 'neurology':
         return LucideIcons.brain;
       case 'wind':
         return LucideIcons.wind;
@@ -361,6 +321,7 @@ class _DoctorFiltersState extends State<DoctorFilters> {
       case 'smile':
         return LucideIcons.smile;
       case 'stethoscope':
+      case 'general-medicine':
         return LucideIcons.stethoscope;
       case 'ribbon':
         return LucideIcons.award;
@@ -377,18 +338,22 @@ class _DoctorFiltersState extends State<DoctorFilters> {
       case 'activity':
         return LucideIcons.activity;
       case 'baby':
+      case 'pediatrics':
         return LucideIcons.baby;
       case 'scissors':
+      case 'surgery':
         return LucideIcons.scissors;
       case 'scan':
         return LucideIcons.scan;
       case 'flask-conical':
+      case 'pathology':
         return LucideIcons.flaskConical;
       case 'leaf':
         return LucideIcons.leaf;
       case 'heart':
         return LucideIcons.heart;
       default:
+        // Default icon if no specific match is found for the department string
         return LucideIcons.stethoscope;
     }
   }
@@ -488,71 +453,7 @@ class _DoctorFiltersState extends State<DoctorFilters> {
     );
   }
 
-  // --- SELECTION SHEET (Clinics) ---
-  void _showSelectionSheet(
-    BuildContext context,
-    String title,
-    List<String> options,
-    Function(String) onSelect,
-    String currentSelection,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: context.theme.scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (ctx) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (_, scrollController) => Padding(
-          padding: EdgeInsets.fromLTRB(
-            context.spaceLg,
-            12,
-            context.spaceLg,
-            context.spaceLg,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _sheetHandle(context),
-              context.gapMd,
-              Text(title, style: context.text.titleMedium),
-              context.gapMd,
-              Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: options.length + 1,
-                  itemBuilder: (_, index) {
-                    if (index == 0) {
-                      return _buildSheetOption(
-                        "All",
-                        'All',
-                        currentSelection,
-                        (_) => onSelect('All'),
-                        context,
-                      );
-                    }
-                    final option = options[index - 1];
-                    return _buildSheetOption(
-                      option,
-                      option,
-                      currentSelection,
-                      (v) => onSelect(v),
-                      context,
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  // 🚀 _showSelectionSheet (Clinic Sheet) Removed Completely
 
   // --- SORT SHEET ---
   void _showSortSheet(BuildContext context) {

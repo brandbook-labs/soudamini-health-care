@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/patients/booking/appointment_booking_screen.dart';
 import 'package:my_new_app/screens/patients/path/to/doctor_card_widget.dart';
 import 'package:provider/provider.dart';

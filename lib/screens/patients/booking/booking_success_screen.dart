@@ -5,10 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:confetti/confetti.dart';
-import 'package:my_new_app/screens/main_layout.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:lucide_icons/lucide_icons.dart';
-import 'package:share_plus/share_plus.dart'; // 🚀 [NEW]: For Share and Download
+import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:share_plus/share_plus.dart';
+
+// 🚀 ଆପଣଙ୍କର ନିଜର MainLayout ର ପାଥ୍ ଦେବେ
+import 'package:my_new_app/screens/main_layout.dart'; 
 
 // --- THEME CONSTANTS ---
 const Color kPrimaryColor = Color.fromARGB(255, 22, 96, 255);
@@ -69,37 +71,48 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
       // ୧. Loading ଦେଖାନ୍ତୁ
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isDownload ? "Preparing Ticket for Download..." : "Preparing Ticket to Share..."),
+          content: Text(isDownload
+              ? "Preparing Ticket for Download..."
+              : "Preparing Ticket to Share..."),
           backgroundColor: kPrimaryColor,
           duration: const Duration(seconds: 1),
         ),
       );
 
       // ୨. ଟିକେଟ୍ UI କୁ ଉଚ୍ଚ ମାନର (High-Res) ଇମେଜ୍ ରେ ପରିବର୍ତ୍ତନ କରନ୍ତୁ
-      RenderRepaintBoundary boundary = _ticketKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary = _ticketKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0); // 3.0 for sharp quality
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       // ୩. ଫାଇଲ୍ ନାମ ସୃଷ୍ଟି କରନ୍ତୁ: patientName_slotNumber_date
-      final patientName = (widget.appointmentDetails['patientName'] ?? 'Patient').toString().replaceAll(' ', '_');
-      final slotNum = (widget.appointmentDetails['slotNumber'] ?? 'Slot').toString();
+      final patientName = (widget.appointmentDetails['patientName'] ?? 'Patient')
+          .toString()
+          .replaceAll(' ', '_');
+      final slotNum =
+          (widget.appointmentDetails['slotNumber'] ?? 'Slot').toString();
       final date = (widget.appointmentDetails['date'] ?? 'Date').toString();
       final fileName = "${patientName}_${slotNum}_$date.png";
 
       // ୪. XFile ସୃଷ୍ଟି କରନ୍ତୁ (ଏହା Web ଏବଂ Mobile ଉଭୟରେ କାମ କରେ)
-      final xFile = XFile.fromData(pngBytes, mimeType: 'image/png', name: fileName);
+      final xFile =
+          XFile.fromData(pngBytes, mimeType: 'image/png', name: fileName);
 
-      // ୫. Share/Download କରନ୍ତୁ (Web ରେ ଏହା ସିଧାସଳଖ ଡାଉନଲୋଡ୍ ହୋଇଯିବ)
+      // ୫. Share/Download କରନ୍ତୁ
       await Share.shareXFiles(
         [xFile],
-        text: isDownload ? null : "Here is my appointment ticket for Jivan Health.",
+        text: isDownload
+            ? null
+            : "Here is my appointment ticket for Jivan Health.",
       );
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error processing ticket: $e"), backgroundColor: Colors.red),
+          SnackBar(
+              content: Text("Error processing ticket: $e"),
+              backgroundColor: Colors.red),
         );
       }
     }
@@ -117,34 +130,43 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
 
     final details = widget.appointmentDetails;
 
-    // Safety checks for null values
-    final patientName = details['patientName'] ?? "Guest";
-    final phone = details['phone'] ?? "0000000000";
-    final bookingId = details['bookingId'] ?? "ID-000";
-    final time = details['time'] ?? "09:00 AM";
-    final date = details['date'] ?? "N/A";
-    final amount = details['amount'] ?? 0;
-    final slotNumber = details['slotNumber'] ?? "A-01"; 
+    // 🚀 [API DATA EXTRACTION]: ସଠିକ୍ ଭାବରେ API ରୁ ଆସିଥିବା ଡାଟା ମ୍ୟାପ୍ କରାଯାଇଛି
+    final patientName = details['patientName']?.toString() ?? "Guest";
+    final phone = details['phone']?.toString() ?? "0000000000";
+    
+    // API response send 'display_booking_id' as bookingId here
+    final bookingId = details['bookingId']?.toString() ?? "ID-000"; 
+    
+    final time = details['time']?.toString() ?? "09:00 AM";
+    final date = details['date']?.toString() ?? "N/A";
+    
+    // Amount could be int or double from API
+    final rawAmount = details['amount'] ?? 0;
+    final double totalAmount = (rawAmount is int) 
+        ? rawAmount.toDouble() 
+        : (rawAmount is double ? rawAmount : 0.0);
 
-    final serviceName = details['doctorName'] ?? "Medical Service";
-    final serviceType = details['specialty'] ?? "General";
-    final serviceImage = details['doctorImage']; 
+    final slotNumber = details['slotNumber']?.toString() ?? "A-01";
+
+    final serviceName = details['doctorName']?.toString() ?? "Medical Service";
+    final serviceType = details['specialty']?.toString() ?? "General";
+    final serviceImage = details['doctorImage']?.toString();
 
     final patientId = _generatePatientId(patientName, phone);
-    final isPayAtClinic =
-        details['paymentMode'] == 'pay_at_clinic' ||
-        details['paymentMode'] == 'pay_at_home';
-    final double totalAmount = (amount as num).toDouble();
+    
+    final paymentMode = details['paymentMode']?.toString() ?? 'pay_at_clinic';
+    final isPayAtClinic = paymentMode == 'pay_at_clinic' || paymentMode == 'pay_at_home';
 
     // 🚀 [ENHANCED QR DATA]: ସମସ୍ତ ଗୁରୁତ୍ୱପୂର୍ଣ୍ଣ ତଥ୍ୟ
-    final qrData = "JIVAN HEALTHCARE\nBooking: $bookingId\nSlot: $slotNumber\nPatient: $patientName ($patientId)\nDoctor: $serviceName\nDate: $date\nTime: $time\nTotal: ₹$totalAmount";
+    final qrData =
+        "JIVAN HEALTHCARE\nBooking: $bookingId\nSlot: $slotNumber\nPatient: $patientName ($patientId)\nDoctor: $serviceName\nDate: $date\nTime: $time\nTotal: ₹$totalAmount";
 
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Stack(
         children: [
           SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 60, 20, 150), // Increased bottom padding for buttons
+            padding: const EdgeInsets.fromLTRB(20, 60, 20, 150),
             child: Column(
               children: [
                 const Icon(
@@ -229,14 +251,16 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: Colors.white10),
                                   color: kPrimaryColor.withValues(alpha: 0.1),
-                                  image: serviceImage != null && serviceImage.toString().isNotEmpty
+                                  image: serviceImage != null &&
+                                          serviceImage.isNotEmpty
                                       ? DecorationImage(
                                           image: NetworkImage(serviceImage),
                                           fit: BoxFit.cover,
                                         )
                                       : null,
                                 ),
-                                child: serviceImage == null || serviceImage.toString().isEmpty
+                                child: serviceImage == null ||
+                                        serviceImage.isEmpty
                                     ? const Icon(
                                         LucideIcons.stethoscope,
                                         color: kPrimaryColor,
@@ -276,8 +300,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: kPrimaryColor.withValues(
-                                          alpha: 0.1,
-                                        ),
+                                            alpha: 0.1),
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
@@ -302,7 +325,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                           color: innerContainerColor,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
-                            vertical: 24, // Added more padding for breathing room
+                            vertical: 24, 
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -324,7 +347,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                     Text(
                                       slotNumber,
                                       style: const TextStyle(
-                                        fontSize: 38, // BIGGER SLOT NUMBER
+                                        fontSize: 38, 
                                         fontWeight: FontWeight.w900,
                                         color: kGreenColor,
                                       ),
@@ -345,12 +368,14 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                               Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white, // Always white bg for QR scanning
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey.shade300, width: 2),
+                                  border: Border.all(
+                                      color: Colors.grey.shade300, width: 2),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black
+                                          .withValues(alpha: 0.05),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     )
@@ -359,7 +384,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                 child: QrImageView(
                                   data: qrData,
                                   version: QrVersions.auto,
-                                  size: 90.0, // Increased Size
+                                  size: 90.0, 
                                   eyeStyle: const QrEyeStyle(
                                     eyeShape: QrEyeShape.square,
                                     color: Colors.black,
@@ -377,42 +402,73 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
 
                         // 3. PATIENT DETAILS SECTION
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text("PATIENT NAME", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: subTextColor)),
+                                        Text("PATIENT NAME",
+                                            style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                                color: subTextColor)),
                                         const SizedBox(height: 4),
-                                        Text(patientName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textColor), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                        Text(patientName,
+                                            style: TextStyle(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: textColor),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis),
                                       ],
                                     ),
                                   ),
                                   Column(
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      Text("PATIENT ID", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: subTextColor)),
+                                      Text("PATIENT ID",
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: subTextColor)),
                                       const SizedBox(height: 4),
-                                      Text(patientId, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: textColor)),
+                                      Text(patientId,
+                                          style: TextStyle(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: textColor)),
                                     ],
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 16),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text("PHONE NUMBER", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: subTextColor)),
+                                      Text("PHONE NUMBER",
+                                          style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: subTextColor)),
                                       const SizedBox(height: 4),
-                                      Text("+91 $phone", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: textColor)),
+                                      Text("+91 $phone",
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: textColor)),
                                     ],
                                   ),
                                 ],
@@ -429,8 +485,22 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                             children: [
                               Row(
                                 children: [
-                                  _buildDetailItem(LucideIcons.calendar, "Date", date, innerContainerColor, borderColor, subTextColor, textColor),
-                                  _buildDetailItem(LucideIcons.clock, "Time", time, innerContainerColor, borderColor, subTextColor, textColor),
+                                  _buildDetailItem(
+                                      LucideIcons.calendar,
+                                      "Date",
+                                      date,
+                                      innerContainerColor,
+                                      borderColor,
+                                      subTextColor,
+                                      textColor),
+                                  _buildDetailItem(
+                                      LucideIcons.clock,
+                                      "Time",
+                                      time,
+                                      innerContainerColor,
+                                      borderColor,
+                                      subTextColor,
+                                      textColor),
                                 ],
                               ),
                               const SizedBox(height: 20),
@@ -441,25 +511,37 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          isPayAtClinic ? "PAYABLE AT VISIT" : "AMOUNT PAID",
-                                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white54),
+                                          isPayAtClinic
+                                              ? "PAYABLE AT VISIT"
+                                              : "AMOUNT PAID",
+                                          style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white54),
                                         ),
                                         Text(
                                           "₹${totalAmount.toStringAsFixed(0)}",
-                                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                                          style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.white),
                                         ),
                                       ],
                                     ),
                                     if (isPayAtClinic)
-                                      const Icon(LucideIcons.alertCircle, color: Colors.amber, size: 28)
+                                      const Icon(LucideIcons.alertCircle,
+                                          color: Colors.amber, size: 28)
                                     else
-                                      const Icon(LucideIcons.checkCircle, color: kGreenColor, size: 28),
+                                      const Icon(LucideIcons.checkCircle,
+                                          color: kGreenColor, size: 28),
                                   ],
                                 ),
                               ),
@@ -471,7 +553,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   ),
                 ),
                 // --- END REPAINT BOUNDARY ---
-                
+
                 const SizedBox(height: 24),
 
                 // BOOKING ID COPY
@@ -484,7 +566,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
                       color: cardColor,
                       borderRadius: BorderRadius.circular(8),
@@ -498,15 +581,23 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                           children: [
                             Text(
                               "BOOKING REFERENCE",
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: subTextColor),
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: subTextColor),
                             ),
                             Text(
                               bookingId,
-                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'monospace', color: textColor),
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  color: textColor),
                             ),
                           ],
                         ),
-                        Icon(LucideIcons.copy, size: 16, color: subTextColor),
+                        Icon(LucideIcons.copy,
+                            size: 16, color: subTextColor),
                       ],
                     ),
                   ),
@@ -526,19 +617,31 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
               emissionFrequency: 0.05,
               numberOfParticles: 20,
               gravity: 0.2,
-              colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange],
+              colors: const [
+                Colors.green,
+                Colors.blue,
+                Colors.pink,
+                Colors.orange
+              ],
             ),
           ),
 
           // 🚀 ENHANCED BOTTOM BUTTONS (Download, Share, Home) 🚀
           Positioned(
-            bottom: 0, left: 0, right: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: cardColor,
                 border: Border(top: BorderSide(color: borderColor)),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))],
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5))
+                ],
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -548,13 +651,22 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                       // 🚀 DOWNLOAD BUTTON
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _captureAndShareTicket(isDownload: true),
-                          icon: Icon(LucideIcons.download, size: 18, color: textColor),
-                          label: Text("Download", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                          onPressed: () =>
+                              _captureAndShareTicket(isDownload: true),
+                          icon: Icon(LucideIcons.download,
+                              size: 18, color: textColor),
+                          label: Text("Download",
+                              style: TextStyle(
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            side: BorderSide(color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            side: BorderSide(
+                                color: isDarkMode
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
@@ -562,13 +674,19 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                       // 🚀 SHARE BUTTON
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => _captureAndShareTicket(isDownload: false),
-                          icon: const Icon(LucideIcons.share2, size: 18, color: Colors.white),
-                          label: const Text("Share", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          onPressed: () =>
+                              _captureAndShareTicket(isDownload: false),
+                          icon: const Icon(LucideIcons.share2,
+                              size: 18, color: Colors.white),
+                          label: const Text("Share",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: kPrimaryColor,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             elevation: 0,
                           ),
                         ),
@@ -581,7 +699,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                     onPressed: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => const MainLayout()), 
+                        MaterialPageRoute(
+                            builder: (context) => const MainLayout()),
                         (route) => false,
                       );
                     },
@@ -589,7 +708,11 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       minimumSize: const Size(double.infinity, 48),
                     ),
-                    child: Text("Return to Home", style: TextStyle(color: subTextColor, fontWeight: FontWeight.bold, fontSize: 16)),
+                    child: Text("Return to Home",
+                        style: TextStyle(
+                            color: subTextColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16)),
                   ),
                 ],
               ),
@@ -600,12 +723,16 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
     );
   }
 
-  Widget _buildDetailItem(IconData icon, String label, String value, Color bg, Color border, Color labelColor, Color valueColor) {
+  Widget _buildDetailItem(IconData icon, String label, String value, Color bg,
+      Color border, Color labelColor, Color valueColor) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12), border: Border.all(color: border)),
+        decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -613,11 +740,19 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
               children: [
                 Icon(icon, size: 16, color: kPrimaryColor),
                 const SizedBox(width: 8),
-                Text(label.toUpperCase(), style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: labelColor)),
+                Text(label.toUpperCase(),
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: labelColor)),
               ],
             ),
             const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: valueColor)),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w900,
+                    color: valueColor)),
           ],
         ),
       ),

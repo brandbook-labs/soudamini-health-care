@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:my_new_app/screens/admin/admin_widgets/admin_payment_qr_screen.dart';
 import '../../../services/api_service.dart';
@@ -19,7 +19,7 @@ class _AdminWalkInScreenState extends State<AdminWalkInScreen> {
   final List<Map<String, dynamic>> _bookingTypes = [
     {'title': 'Doctor', 'icon': LucideIcons.stethoscope, 'isComingSoon': false},
     {'title': 'Lab Test', 'icon': LucideIcons.microscope, 'isComingSoon': false}, 
-    {'title': 'Hospital Bed', 'icon': LucideIcons.bed, 'isComingSoon': true},
+    // {'title': 'Hospital Bed', 'icon': LucideIcons.bed, 'isComingSoon': true},
   ];
   String _selectedBookingType = 'Doctor';
 

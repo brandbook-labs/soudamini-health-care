@@ -1,6 +1,6 @@
 // lib/screens/admin/adminUsers/adminStaff/widgets/staff_list_card.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart'; 
 import '../staff_details_screen.dart'; 

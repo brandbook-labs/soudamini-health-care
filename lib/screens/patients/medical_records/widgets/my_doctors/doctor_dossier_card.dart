@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/my_care_team/doctor_dossier_card.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:my_new_app/screens/patients/medical_records/my_doc_details_screen.dart';
 

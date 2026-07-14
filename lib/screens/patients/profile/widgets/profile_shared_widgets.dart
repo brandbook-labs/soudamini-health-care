@@ -1,6 +1,6 @@
 // lib/screens/patients/profile/widgets/profile_shared_widgets.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // --- CONSTANTS ---
 class AppSpacing {

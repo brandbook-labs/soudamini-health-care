@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:my_new_app/screens/admin/adminUsers/adminPatients/models/patient_model.dart';
 import 'package:my_new_app/screens/admin/adminUsers/adminPatients/patientProfile/patient_profile_screen.dart';

@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/my_care_team/dossier_thumbnail_strip.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class DossierThumbnailStrip extends StatelessWidget {
   final List<Map<String, String>> files;

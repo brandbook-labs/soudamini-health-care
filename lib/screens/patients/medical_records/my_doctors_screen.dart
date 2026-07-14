@@ -1,6 +1,6 @@
 // lib/screens/medical_records/my_doctors_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/core/components/index.dart';
 import 'package:my_new_app/screens/patients/medical_records/widgets/my_doctors/doctor_dossier_card.dart';
 import 'package:my_new_app/screens/patients/medical_records/widgets/my_doctors/dossier_empty_state.dart';

@@ -85,7 +85,7 @@ class _MainLayoutState extends State<MainLayout>
   List<Widget> get _screens => [
     HomeScreen(onTabChange: _onNavTap),
     const DoctorsListScreen(),
-    const MedicineShopScreen(),
+    // const MedicineShopScreen(),
     const LabListingScreen(),
     const ProfileScreen(),
   ];

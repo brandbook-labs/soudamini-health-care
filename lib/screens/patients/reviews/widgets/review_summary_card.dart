@@ -1,6 +1,6 @@
 // lib/screens/patient_reviews/widgets/review_summary_card.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class ReviewSummaryCard extends StatelessWidget {
   final int totalReviews;

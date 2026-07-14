@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/record_type_selector.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/record_model.dart';
 
 class RecordTypeSelector extends StatelessWidget {

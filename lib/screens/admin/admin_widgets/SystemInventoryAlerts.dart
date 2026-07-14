@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart'; // Ensure this points to your theme context Ensure this points to your palette
 
 class SystemInventoryAlerts extends StatelessWidget {

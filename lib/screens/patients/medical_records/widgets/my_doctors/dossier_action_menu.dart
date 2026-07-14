@@ -1,6 +1,6 @@
 // lib/screens/medical_records/widgets/my_care_team/dossier_action_menu.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../models/past_consultation_model.dart';
 
 class DossierActionMenu {

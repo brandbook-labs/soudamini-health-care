@@ -1,6 +1,6 @@
 // lib/screens/patient_reviews/widgets/empty_reviews_state.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class EmptyReviewsState extends StatelessWidget {
   final VoidCallback? onReviewPastVisit;

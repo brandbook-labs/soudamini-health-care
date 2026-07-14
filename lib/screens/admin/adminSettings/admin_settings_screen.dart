@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:my_new_app/screens/admin/adminSettings/edit_clinic_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -318,32 +318,32 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   ),
                 ),
                 _MenuDivider(),
-                _MenuItem(
-                  icon: LucideIcons.bell,
-                  title: "Notifications",
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationSettingsScreen(),
-                    ),
-                  ),
-                ),
-                _MenuDivider(),
-                _MenuItem(
-                  icon: LucideIcons.globe,
-                  title: "Language",
-                  trailing: const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Text(
-                      "English",
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
-                    ),
-                  ),
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const LanguageScreen()),
-                  ),
-                ),
+                // _MenuItem(
+                //   icon: LucideIcons.bell,
+                //   title: "Notifications",
+                //   onTap: () => Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (_) => const NotificationSettingsScreen(),
+                //     ),
+                //   ),
+                // ),
+                // _MenuDivider(),
+                // _MenuItem(
+                //   icon: LucideIcons.globe,
+                //   title: "Language",
+                //   trailing: const Padding(
+                //     padding: EdgeInsets.only(right: 8.0),
+                //     child: Text(
+                //       "English",
+                //       style: TextStyle(fontSize: 13, color: Colors.grey),
+                //     ),
+                //   ),
+                //   onTap: () => Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (_) => const LanguageScreen()),
+                //   ),
+                // ),
                 _MenuDivider(),
                 _MenuItem(
                   icon: LucideIcons.fingerprint,
@@ -362,11 +362,11 @@ class _AdminSettingsScreenState extends State<AdminSettingsScreen> {
                   onTap: () => _toggleBiometrics(!_isBiometricEnabled),
                 ),
                 _MenuDivider(),
-                _MenuItem(
-                  icon: LucideIcons.shieldCheck,
-                  title: "Privacy & Security",
-                  onTap: () {},
-                ),
+                // _MenuItem(
+                //   icon: LucideIcons.shieldCheck,
+                //   title: "Privacy & Security",
+                //   onTap: () {},
+                // ),
               ],
             ),
 

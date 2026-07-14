@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 // --- THEME CONSTANTS ---
 const Color kPrimaryColor = Color.fromARGB(255, 22, 96, 255);

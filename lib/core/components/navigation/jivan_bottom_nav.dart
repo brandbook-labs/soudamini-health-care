@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
 
 class JivanBottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
-  final String userRole; // 'patient', 'admin', 'super_admin'
+  final String userRole; // 'patient', 'admin'
 
   const JivanBottomNav({
     super.key,
@@ -21,7 +21,7 @@ class JivanBottomNav extends StatelessWidget {
     final List<Map<String, dynamic>> patientItems = [
       {"icon": LucideIcons.home, "label": "Home"},
       {"icon": LucideIcons.stethoscope, "label": "Doctors"},
-      {"icon": LucideIcons.tablets, "label": "Medicines"},
+      // {"icon": LucideIcons.tablets, "label": "Medicines"}, // 🚀 Temporarily disabled for this app
       {"icon": LucideIcons.flaskConical, "label": "Labs"},
       {"icon": LucideIcons.user, "label": "Profile"},
     ];
@@ -35,22 +35,13 @@ class JivanBottomNav extends StatelessWidget {
       {"icon": LucideIcons.settings, "label": "Settings"},
     ];
 
-    // C. Super Admin (Platform Owner) Menu
-    final List<Map<String, dynamic>> superAdminItems = [
-      {"icon": LucideIcons.barChart3, "label": "Overview"},
-      {"icon": LucideIcons.store, "label": "Clinics"},
-      {"icon": LucideIcons.users, "label": "Users"},
-      {"icon": LucideIcons.shieldCheck, "label": "Approvals"},
-      {"icon": LucideIcons.user, "label": "Profile"},
-    ];
+    // 🚀 Super Admin items completely removed for strict scoping
 
     List<Map<String, dynamic>> items;
-    if (userRole == 'super_admin') {
-      items = superAdminItems;
-    } else if (userRole == 'admin') {
+    if (userRole == 'admin') {
       items = adminItems;
     } else {
-      items = patientItems;
+      items = patientItems; // Safely defaults to patient
     }
 
     // Handle OS bottom safe areas (e.g., iPhone home indicator)

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:my_new_app/core/utils/theme_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:my_new_app/controllers/language_controller.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class HomeBanners extends StatefulWidget {
   const HomeBanners({super.key});

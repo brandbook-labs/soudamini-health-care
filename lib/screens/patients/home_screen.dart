@@ -66,10 +66,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 1. Search Bar
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
-                    child: const HomeSearchBar(),
-                  ),
+                  // Padding(
+                  //   padding: EdgeInsets.symmetric(horizontal: context.spaceMd),
+                  //   child: const HomeSearchBar(),
+                  // ),
 
                   context.gapMd,
 

@@ -1,7 +1,7 @@
 // lib/screens/medical_records/manage_records_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/services/api_service.dart';
 import 'package:my_new_app/screens/patients/medical_records/record_details_screen.dart';
 

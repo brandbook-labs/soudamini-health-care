@@ -206,4 +206,6 @@ class Doctor {
       membershipLevel: json['membershipLevel'] ?? 0,
     );
   }
+
+  String? get clinicId => null;
 }

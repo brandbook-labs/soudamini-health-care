@@ -1,7 +1,7 @@
 // lib/screens/admin/adminUsers/adminPatients/admin_patients_screen.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:my_new_app/services/api_service.dart';

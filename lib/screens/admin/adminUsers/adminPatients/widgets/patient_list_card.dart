@@ -1,6 +1,6 @@
 // lib/screens/admin/adminUsers/adminPatients/widgets/patient_list_card.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../models/patient_model.dart';
 
 class PatientListCard extends StatelessWidget {

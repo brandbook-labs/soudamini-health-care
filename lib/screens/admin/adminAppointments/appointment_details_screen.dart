@@ -1,6 +1,6 @@
 // lib/screens/admin/adminAppointments/appointment_details_screen.dart
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/models/appointment_model.dart';
 import 'package:my_new_app/services/api_service.dart';
 import 'package:url_launcher/url_launcher.dart';

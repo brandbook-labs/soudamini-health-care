@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:intl/intl.dart'; // Add intl: ^0.18.0 to pubspec.yaml
 
 // --- 1. MODEL CLASS (Exact Replica of React Logic) ---

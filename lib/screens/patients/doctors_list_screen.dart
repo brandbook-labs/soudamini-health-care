@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:my_new_app/screens/patients/home_widgets/global_search_header.dart';
 import 'package:my_new_app/screens/patients/providers/user_provider.dart';
 import 'package:provider/provider.dart';
@@ -73,41 +73,32 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
     }
   }
 
-  // 🚀 ତାରିଖ ଏବଂ କ୍ଲିନିକ୍ ଫିଲ୍ଟର୍ ଲଜିକ୍ (ସଂଶୋଧିତ)
+  // 🚀 ତାରିଖ ଏବଂ ଡିପାର୍ଟମେଣ୍ଟ୍ ଫିଲ୍ଟର୍ ଲଜିକ୍ (କ୍ଲିନିକ୍ ଫିଲ୍ଟର୍ ହଟାଯାଇଛି)
   List<Doctor> _getFilteredDoctors(List<Doctor> allDoctors) {
     final query = _filterState.query.toLowerCase().trim();
     
-    // 🚀 ଆଜି ଏବଂ ଆସନ୍ତାକାଲି ର ତାରିଖ ବାହାର କରିବା (ମଡେଲ୍ ରେ ଆସୁଥିବା ଫର୍ମାଟ୍ ଅନୁଯାୟୀ)
-    // ଉଦାହରଣ: "Wednesday, 1 April"
-    // ଯେହେତୁ API ରୁ String ଆକାରରେ ଆସୁଛି (next_slot), ଆମେ ମ୍ୟାଚିଂ କୁ ଟିକେ ସ୍ମାର୍ଟ କରିବା
     final now = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
     
-    // Day ଏବଂ Month ବାହାର କରିବା (e.g., "1 April")
     final List<String> monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     final String todayShort = "${now.day} ${monthNames[now.month]}";
     final String tomorrowShort = "${tomorrow.day} ${monthNames[tomorrow.month]}";
 
     var temp = allDoctors.where((doc) {
-      // ୧. ସର୍ଚ୍ଚ ଏବଂ ସ୍ପେସିଆଲିଟି
+      // ୧. ସର୍ଚ୍ଚ ଏବଂ ସ୍ପେସିଆଲିଟି (Departments)
       final matchesSearch = doc.name.toLowerCase().contains(query) || doc.specialty.toLowerCase().contains(query);
       final matchesSpec = _filterState.specialty == "All" || doc.specialty.toLowerCase() == _filterState.specialty.toLowerCase();
       
-      // ୨. 🚀 କ୍ଲିନିକ୍ ଫିଲ୍ଟର୍ (ସିଧାସଳଖ ମଡେଲ୍ ପ୍ରପର୍ଟି ବ୍ୟବହାର କରାଗଲା)
-      final String clinicName = doc.clinicName; // No fullData needed!
-      final matchesClinic = _filterState.clinic == "All" || clinicName == _filterState.clinic;
+      // ୨. 🚀 Availability ତାରିଖ ମ୍ୟାଚିଂ (କ୍ଲିନିକ୍ ଲଜିକ୍ ଏଠାରୁ ହଟାଯାଇଛି)
+      final String availableDateText = doc.nextAvailable; 
       
-      // ୩. 🚀 Availability ତାରିଖ ମ୍ୟାଚିଂ (ସିଧାସଳଖ ମଡେଲ୍ ପ୍ରପର୍ଟି ବ୍ୟବହାର କରାଗଲା)
-      final String availableDateText = doc.nextAvailable; // ଉଦାହରଣ: "Wednesday, 1 April 9:00 AM"
-      
-      // ଯଦି ଫିଲ୍ଟର୍ ଅନ୍ ଅଛି, ତେବେ ଟେକ୍ସଟ୍ ଭିତରେ "1 April" ଇତ୍ୟାଦି ଖୋଜିବା
       final matchesToday = !_filterState.isAvailableToday || availableDateText.contains(todayShort);
       final matchesTomorrow = !_filterState.isAvailableTomorrow || availableDateText.contains(tomorrowShort);
 
-      return matchesSearch && matchesSpec && matchesClinic && matchesToday && matchesTomorrow;
+      return matchesSearch && matchesSpec && matchesToday && matchesTomorrow;
     }).toList();
 
-    // ୪. ସର୍ଟିଂ ଲଜିକ୍
+    // ୩. ସର୍ଟିଂ ଲଜିକ୍
     if (_filterState.sortBy == 'price_low') {
       temp.sort((a, b) => (a.price).compareTo(b.price));
     } else if (_filterState.sortBy == 'experience') {
@@ -134,7 +125,6 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
     final userProvider = context.watch<UserProvider>();
     final isOdia = context.watch<LanguageController>().currentLocale.languageCode == 'or';
 
-    // 🚀 ୧. ଉଭୟ ସମ୍ପୂର୍ଣ୍ଣ ଲିଷ୍ଟ୍ ଏବଂ ଫିଲ୍ଟର୍ ହୋଇଥିବା ଲିଷ୍ଟ୍ ବାହାର କରିବା
     final allDoctors = doctorProvider.doctorsList; 
     final filteredDoctors = _getFilteredDoctors(allDoctors);
     
@@ -148,7 +138,7 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
           children: [
             GlobalSearchHeader(
               controller: _searchController,
-              hintText: "Search name, specialty, or clinic...", 
+              hintText: "Search name or specialty...", // କ୍ଲିନିକ୍ ୱାର୍ଡ ହଟାଗଲା
               onClear: () {
                 _searchController.clear();
                 FocusScope.of(context).unfocus();
@@ -169,11 +159,10 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                                     physics: const AlwaysScrollableScrollPhysics(),
                                     child: SizedBox(
                                       height: constraints.maxHeight,
-                                      // 🚀 ୨. ସ୍ମାର୍ଟ Empty State କୁ ପାରାମିଟର୍ସ ପଠାଇବା
                                       child: _buildEmptyState(
                                         context: context, 
                                         currentLocation: userProvider.fullAddress,
-                                        hasDoctorsInLocation: allDoctors.isNotEmpty, // ପ୍ରକୃତରେ ସେହି ଅଞ୍ଚଳରେ ଡାକ୍ତର ଅଛନ୍ତି କି ନାହିଁ
+                                        hasDoctorsInLocation: allDoctors.isNotEmpty, 
                                       ),
                                     ),
                                   ),
@@ -185,9 +174,10 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                                 SliverToBoxAdapter(
                                   child: DoctorFilters(
                                     currentFilters: _filterState,
-                                    clinics: allDoctors
-                                        .map((doc) => doc.clinicName) 
-                                        .where((name) => name.isNotEmpty && name != 'Private Clinic') 
+                                    // 🚀 SENIOR DEV LOGIC: ଡାକ୍ତରଙ୍କ ଲିଷ୍ଟ୍ ରୁ Unique Departments ବାହାର କରି ପଠାଯାଇଛି
+                                    departments: allDoctors
+                                        .map((doc) => doc.specialty)
+                                        .where((specialty) => specialty.isNotEmpty)
                                         .toSet()
                                         .toList(),
                                     onFilterChanged: _handleFilterChange,
@@ -231,7 +221,6 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // ଯଦି ଲୋକେସନ୍ ରେ ଡାକ୍ତର ଅଛନ୍ତି, କିନ୍ତୁ ଆମ ଲିଷ୍ଟ୍ ଖାଲି ଅଛି, ଅର୍ଥାତ୍ ଏହା ଫିଲ୍ଟର୍ ଯୋଗୁଁ ହୋଇଛି!
     final bool isFilterEmpty = hasDoctorsInLocation; 
 
     return Center(
@@ -243,7 +232,6 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
             Container(
               width: 120, height: 120,
               decoration: BoxDecoration(color: colorScheme.errorContainer.withValues(alpha: 0.3), shape: BoxShape.circle),
-              // 🚀 ଆଇକନ୍ ଚେଞ୍ଜ: ଫିଲ୍ଟର୍ ପାଇଁ SearchX, ଲୋକେସନ୍ ପାଇଁ MapPinOff
               child: Icon(
                 isFilterEmpty ? LucideIcons.searchX : LucideIcons.mapPinOff, 
                 size: 50, 
@@ -272,13 +260,12 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
             SizedBox(
               height: 50, width: double.infinity,
               child: isFilterEmpty
-                  // 🚀 BUTTON 1: CLEAR FILTERS
                   ? FilledButton.icon(
                       onPressed: () {
                         _searchController.clear();
                         FocusScope.of(context).unfocus();
                         setState(() {
-                          _filterState = FilterState(); // ସବୁ ଫିଲ୍ଟର୍ ରିସେଟ୍ କରିଦିଅନ୍ତୁ
+                          _filterState = FilterState(); 
                         });
                       },
                       icon: const Icon(LucideIcons.refreshCcw),
@@ -288,7 +275,6 @@ class _DoctorsListScreenState extends State<DoctorsListScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
                       ),
                     )
-                  // 🚀 BUTTON 2: CHANGE LOCATION
                   : FilledButton.icon(
                       onPressed: () async {
                         final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const LocationPickerScreen(), fullscreenDialog: true));

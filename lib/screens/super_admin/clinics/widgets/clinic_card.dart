@@ -1,7 +1,7 @@
 // lib/screens/super_admin/clinics/widgets/clinic_card.dart
 
 import 'package:flutter/material.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:url_launcher/url_launcher.dart'; // Ensure url_launcher is in pubspec.yaml
 
 class ClinicCard extends StatelessWidget {
