@@ -1,4 +1,4 @@
-package website.jivan.jivanapp.my_new_app
+package website.jivan.soudamini
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

@@ -7,8 +7,8 @@ import '../models/clinic_model.dart';
 import '../models/doctor_model.dart';
 
 class ApiService {
-  final String _baseUrl = 'http://localhost:5000/api/v2/';
-  // final String _baseUrl = 'https://api.jivan.website/api/v2/';
+  // final String _baseUrl = 'http://localhost:5000/api/v2/';
+  final String _baseUrl = 'https://api.jivan.website/api/v2/';
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 

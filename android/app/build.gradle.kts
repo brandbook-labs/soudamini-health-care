@@ -8,7 +8,7 @@ plugins {
 }
 
 android {
-    namespace = "website.jivan.jivanapp.my_new_app"
+    namespace = "website.jivan.soudamini"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.1.12297006"
 
@@ -31,7 +31,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "website.jivan.jivanapp.my_new_app"
+        applicationId = "website.jivan.soudamini"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
