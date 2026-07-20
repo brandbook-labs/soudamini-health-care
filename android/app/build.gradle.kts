@@ -52,9 +52,13 @@ android {
 
     buildTypes {
         release {
-            // --- 3. APPLY SIGNING CONFIG ONLY IF KEY EXISTS ---
+            // --- 3. APPLY SIGNING CONFIG ---
             if (hasKeystore) {
+                // Play Store ପାଇଁ ଅରିଜିନାଲ୍ ସିଗ୍ନେଚର୍
                 signingConfig = signingConfigs.getByName("release")
+            } else {
+                // 🚀 SENIOR TRICK: ଯଦି Keystore ନାହିଁ, ତେବେ ଲୋକାଲ୍ ଇନଷ୍ଟଲ୍ ପାଇଁ ଡିବଗ୍ କି ବ୍ୟବହାର କରନ୍ତୁ!
+                signingConfig = signingConfigs.getByName("debug")
             }
             
             isMinifyEnabled = false
