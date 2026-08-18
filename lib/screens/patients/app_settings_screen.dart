@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+// ⚠️ CONFIRM DOMAIN: update these two constants if your live website domain
+// is different from the one registered as the Privacy Policy URL in Play
+// Console. They currently point at the pages shipped in the
+// soudamini-healthcare--react site (Privacy.jsx / Terms.jsx).
+const String _kPrivacyPolicyUrl = 'https://soudaminihealthcare.com/privacy';
+const String _kTermsUrl = 'https://soudaminihealthcare.com/terms';
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
@@ -146,14 +154,14 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 icon: LucideIcons.fileText,
                 title: "Terms & Conditions",
                 textColor: textColor,
-                onTap: () {},
+                onTap: () => _openLegalUrl(context, _kTermsUrl),
               ),
               _buildDivider(borderColor),
               _buildNavTile(
                 icon: LucideIcons.shieldCheck,
                 title: "Privacy Policy",
                 textColor: textColor,
-                onTap: () {},
+                onTap: () => _openLegalUrl(context, _kPrivacyPolicyUrl),
               ),
             ]),
 
@@ -311,5 +319,18 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
 
   Widget _buildDivider(Color color) {
     return Divider(height: 1, thickness: 1, color: color);
+  }
+
+  // These previously did nothing (empty onTap). Play Store reviewers
+  // routinely test that in-app Privacy Policy / Terms links actually open,
+  // so a dead link here is an easy rejection trigger.
+  Future<void> _openLegalUrl(BuildContext context, String url) async {
+    final uri = Uri.parse(url);
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Couldn't open $url")),
+      );
+    }
   }
 }

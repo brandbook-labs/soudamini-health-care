@@ -10,7 +10,12 @@
         android:label="Soudamini"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon"
-        android:usesCleartextTraffic="true">
+        android:usesCleartextTraffic="false">
+        <!-- Cleartext traffic was previously allowed app-wide even though the
+             real API (api.jivan.website) is HTTPS-only. For a health app that
+             promises "military-grade encryption" in its own Privacy Policy,
+             this flag should be false so no request or WebView can silently
+             fall back to plain HTTP. -->
         
         <activity
             android:name=".MainActivity"
@@ -49,6 +54,13 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- Needed so url_launcher can reliably open the Privacy Policy /
+             Terms links (and any other https link) in a browser on Android
+             11+, which restricts package visibility by default. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

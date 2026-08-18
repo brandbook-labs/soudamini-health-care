@@ -1,4 +1,4 @@
-package website.jivan.soudamini
+package com.brandbooks.soudamini
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

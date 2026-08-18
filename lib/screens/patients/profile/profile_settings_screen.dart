@@ -1,10 +1,14 @@
 // lib/screens/patients/profile/profile_settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:dio/dio.dart';
 
 // --- NAVIGATION ---
 import '../app_settings_screen.dart';
 import '../notification_settings_screen.dart';
+
+// --- API SERVICE ---
+import '../../../services/api_service.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
   final bool isBiometricEnabled;
@@ -54,7 +58,12 @@ class ProfileSettingsScreen extends StatelessWidget {
             _buildSettingsItem(
               icon: LucideIcons.shieldCheck,
               title: "Account & Security",
-              onTap: () {}, // Navigate to edit password/email screen
+              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Account & Security screen is coming soon."),
+                ),
+              ), // TODO: build a real edit password/email screen; this was a
+              // silent no-op before, which looks broken to reviewers/users.
             ),
             _buildSettingsItem(
               icon: LucideIcons.bell,
@@ -174,6 +183,7 @@ class ProfileSettingsScreen extends StatelessWidget {
   // --- DELETE ACCOUNT BOTTOM SHEET ---
   void _showDeleteAccountSheet(BuildContext context) {
     final dobController = TextEditingController();
+    final apiService = ApiService();
     bool isLoading = false;
     String errorMsg = "";
 
@@ -308,17 +318,51 @@ class ProfileSettingsScreen extends StatelessWidget {
                                     errorMsg = "";
                                   });
 
-                                  // TODO: Add actual API call here
-                                  await Future.delayed(
-                                    const Duration(seconds: 1),
-                                  ); // Mock network delay
+                                  try {
+                                    final response = await apiService
+                                        .deleteAccount(
+                                          dobConfirmation: dobController.text
+                                              .trim(),
+                                        );
 
-                                  if (ctx.mounted) {
-                                    Navigator.pop(ctx); // Close sheet
-                                    Navigator.pop(
-                                      context,
-                                    ); // Pop settings screen
-                                    onLogout(); // Trigger global logout sequence
+                                    final success =
+                                        response.statusCode == 200 ||
+                                        response.statusCode == 202 ||
+                                        response.statusCode == 204;
+
+                                    if (!success) {
+                                      throw Exception(
+                                        response.data is Map
+                                            ? (response.data['msg'] ??
+                                                  "Deletion request failed")
+                                            : "Deletion request failed",
+                                      );
+                                    }
+
+                                    if (ctx.mounted) {
+                                      Navigator.pop(ctx); // Close sheet
+                                      Navigator.pop(
+                                        context,
+                                      ); // Pop settings screen
+                                      onLogout(); // Trigger global logout sequence
+                                    }
+                                  } on DioException catch (e) {
+                                    final serverMsg =
+                                        e.response?.data is Map
+                                        ? e.response?.data['msg']
+                                        : null;
+                                    setModalState(() {
+                                      isLoading = false;
+                                      errorMsg =
+                                          serverMsg ??
+                                          "We couldn't verify your date of birth or reach the server. Please try again.";
+                                    });
+                                  } catch (e) {
+                                    setModalState(() {
+                                      isLoading = false;
+                                      errorMsg =
+                                          "Something went wrong. Please try again or contact support.";
+                                    });
                                   }
                                 },
                           style: ElevatedButton.styleFrom(

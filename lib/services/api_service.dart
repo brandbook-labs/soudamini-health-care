@@ -114,6 +114,29 @@ class ApiService {
     );
   }
 
+  /// Permanently deletes the signed-in patient's account and associated data.
+  ///
+  /// ⚠️ ASSUMPTION TO CONFIRM WITH BACKEND: this mirrors the existing
+  /// GET /users (getUserProfile) and PUT /users (updateProfile) convention,
+  /// so it calls DELETE /users. Confirm with your backend developer that this
+  /// route exists and that it actually erases/anonymizes the patient record
+  /// (not just deactivates it) per the Privacy Policy's retention section,
+  /// before relying on this in production. If the real route differs
+  /// (e.g. DELETE /users/account), update the path below to match.
+  ///
+  /// [dobConfirmation] is sent so the backend can verify the requester's
+  /// identity against the stored date of birth before deleting anything.
+  Future<Response> deleteAccount({required String dobConfirmation}) async {
+    final opts = await _getAuthOptions(key: 'auth_token');
+    return _request(
+      () => _dio.delete(
+        '/users',
+        data: {'dob_confirmation': dobConfirmation},
+        options: opts,
+      ),
+    );
+  }
+
   Future<List<Clinic>> getUserClinics({
     int page = 1,
     int limit = 10,
